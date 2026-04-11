@@ -52,6 +52,9 @@ from euromail.types import (
     SignupForm,
     CreateSignupFormParams,
     UpdateSignupFormParams,
+    LinkClickStat,
+    InsightReport,
+    InsightFinding,
 )
 
 DEFAULT_BASE_URL = "https://api.euromail.dev"
@@ -183,6 +186,11 @@ class AsyncEuroMail:
     async def cancel_scheduled_email(self, email_id: str) -> SendEmailResponse:
         data = await self._post(f"/v1/emails/{email_id}/cancel", {})
         return SendEmailResponse(**data["data"])
+
+    async def get_email_links(self, email_id: str) -> list[LinkClickStat]:
+        """Return per-link click stats for a sent email."""
+        data = await self._get(f"/v1/emails/{quote(email_id)}/links")
+        return [LinkClickStat(**item) for item in data["data"]]
 
     async def send_broadcast(
         self,
@@ -897,6 +905,27 @@ class AsyncEuroMail:
     async def toggle_signup_form(self, form_id: str) -> SignupForm:
         data = await self._post(f"/v1/signup-forms/{form_id}/toggle", {})
         return SignupForm(**data["data"])
+
+    # ---- Insights Methods ----
+
+    async def generate_insights(self) -> InsightReport:
+        """Trigger an AI-powered operational insights report for this account."""
+        data = await self._post("/v1/insights/generate", {})
+        findings = [InsightFinding(**f) for f in data.get("findings", [])]
+        return InsightReport(
+            id=data["id"],
+            account_id=data.get("account_id"),
+            generated_at=data["generated_at"],
+            period_start=data["period_start"],
+            period_end=data["period_end"],
+            model=data["model"],
+            summary=data["summary"],
+            findings=findings,
+            raw_markdown=data.get("raw_markdown"),
+            acknowledged_at=data.get("acknowledged_at"),
+            input_tokens=data.get("input_tokens"),
+            output_tokens=data.get("output_tokens"),
+        )
 
     # ---- GDPR Methods ----
 

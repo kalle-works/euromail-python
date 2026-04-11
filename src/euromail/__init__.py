@@ -52,6 +52,11 @@ from euromail.types import (
     TimeseriesPoint,
     Webhook,
     WebhookTestResponse,
+    LinkClickStat,
+    InsightSeverity,
+    InsightArea,
+    InsightFinding,
+    InsightReport,
 )
 
 __all__ = [
@@ -104,6 +109,11 @@ __all__ = [
     "TimeseriesPoint",
     "Webhook",
     "WebhookTestResponse",
+    "LinkClickStat",
+    "InsightSeverity",
+    "InsightArea",
+    "InsightFinding",
+    "InsightReport",
 ]
 
 __version__ = "0.1.0"

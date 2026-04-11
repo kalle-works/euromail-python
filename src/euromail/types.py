@@ -23,10 +23,18 @@ EmailEventType = Literal[
 ]
 
 WebhookEventType = Literal[
-    "sent", "delivered", "bounced", "opened", "clicked", "complained", "email.inbound"
+    "sent",
+    "delivered",
+    "bounced",
+    "opened",
+    "clicked",
+    "complained",
+    "email.inbound",
+    "account.auto_paused",
+    "insights.generated",
 ]
 
-SuppressionReason = Literal["hard_bounce", "complaint", "manual", "unsubscribe"]
+SuppressionReason = Literal["hard_bounce", "complaint", "manual", "unsubscribe", "fbl"]
 
 T = TypeVar("T")
 
@@ -599,6 +607,45 @@ class CreateSignupFormParams:
         if self.theme is not None:
             d["theme"] = self.theme
         return d
+
+
+# ---- Link Click Stats ----
+
+@dataclass
+class LinkClickStat:
+    url: str
+    clicks: int
+    unique_clicks: int
+
+
+# ---- Insight Types ----
+
+InsightSeverity = Literal["info", "warn", "critical"]
+InsightArea = Literal["deliverability", "reputation", "performance", "security"]
+
+
+@dataclass
+class InsightFinding:
+    severity: str
+    area: str
+    observation: str
+    recommendation: str
+
+
+@dataclass
+class InsightReport:
+    id: str
+    account_id: Optional[str]
+    generated_at: str
+    period_start: str
+    period_end: str
+    model: str
+    summary: str
+    findings: list[InsightFinding]
+    raw_markdown: Optional[str] = None
+    acknowledged_at: Optional[str] = None
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
 
 
 @dataclass
