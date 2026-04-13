@@ -67,13 +67,17 @@ class EuroMail:
     def __init__(
         self,
         *,
-        api_key: str,
+        api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         timeout: float = DEFAULT_TIMEOUT,
     ) -> None:
-        if not api_key:
-            raise ValueError("api_key is required")
-        self._api_key = api_key
+        resolved_key = api_key or os.environ.get("EUROMAIL_API_KEY")
+        if not resolved_key:
+            raise ValueError(
+                "api_key is required. Either pass it explicitly or set the "
+                "EUROMAIL_API_KEY environment variable."
+            )
+        self._api_key = resolved_key
         resolved_url = base_url or os.environ.get("EUROMAIL_API_URL") or DEFAULT_BASE_URL
         self._base_url = resolved_url.rstrip("/")
         if not self._base_url.startswith("https://") and not self._base_url.startswith(("http://localhost", "http://127.0.0.1")):
@@ -82,7 +86,7 @@ class EuroMail:
         self._client = httpx.Client(
             base_url=self._base_url,
             headers={
-                "Authorization": f"Bearer {api_key}",
+                "Authorization": f"Bearer {resolved_key}",
                 "Accept": "application/json",
                 "Content-Type": "application/json",
             },
