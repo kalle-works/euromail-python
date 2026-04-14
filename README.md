@@ -447,6 +447,54 @@ except EuroMailError as e:
 | | `export_account()` | Export all account data |
 | | `delete_account()` | Permanently delete account |
 
+## Agent Mailboxes
+
+Agent mailboxes provide persistent email addresses for AI agents with at-least-once message delivery via a lease/ack/nack model. Native SDK support is coming in a future release. In the meantime, use `httpx` directly (the same HTTP layer this SDK is built on):
+
+```python
+import os
+import httpx
+
+API = "https://api.euromail.dev"
+headers = {"X-EuroMail-Api-Key": os.environ["EUROMAIL_API_KEY"]}
+
+with httpx.Client(base_url=API, headers=headers, timeout=35) as http:
+    # Create a mailbox
+    mailbox = http.post(
+        "/v1/agent-mailboxes",
+        json={"display_name": "Support Agent"},
+    ).json()["data"]
+
+    while True:
+        # Long-poll for the next message (acquires a 5-minute lease)
+        r = http.get(
+            f"/v1/agent-mailboxes/{mailbox['id']}/messages/next",
+            params={"timeout": 30},
+        )
+        if r.status_code == 408:
+            continue  # no message, poll again
+        body = r.json()
+        msg, token = body["data"], body["lease_token"]
+
+        try:
+            handle(msg)
+        except Exception:
+            # Nack to return the message to the queue for retry
+            http.post(
+                f"/v1/agent-mailboxes/{mailbox['id']}/messages/{msg['id']}/nack",
+                json={"lease_token": token},
+            )
+            raise
+
+        # Ack when done — message will not be redelivered
+        http.post(
+            f"/v1/agent-mailboxes/{mailbox['id']}/messages/{msg['id']}/ack",
+            json={"lease_token": token},
+        )
+```
+
+See the [Agent Mailboxes guide](https://euromail.dev/docs/guides/agent-mailboxes/) for the full flow, duplicate handling, and horizontal scaling patterns.
+
 ## Requirements
 
 - Python 3.9+
