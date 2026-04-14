@@ -648,6 +648,46 @@ class InsightReport:
     output_tokens: Optional[int] = None
 
 
+# ---- Agent Mailboxes ----
+
+
+@dataclass
+class AgentMailbox:
+    id: str
+    account_id: str
+    local_part: str
+    domain: str
+    address: str
+    display_name: Optional[str]
+    created_at: str
+
+
+@dataclass
+class MailboxMessage:
+    id: str
+    mailbox_id: str
+    account_id: str
+    mail_from: str
+    size_bytes: int
+    created_at: str
+    message_id: Optional[str] = None
+    from_header: Optional[str] = None
+    reply_to: Optional[str] = None
+    subject: Optional[str] = None
+    text_body: Optional[str] = None
+    html_body: Optional[str] = None
+    thread_id: Optional[str] = None
+    labels: list[str] = field(default_factory=list)
+    read_at: Optional[str] = None
+
+
+@dataclass
+class LeasedMessage:
+    data: MailboxMessage
+    lease_token: str
+    lease_expires_at: str
+
+
 @dataclass
 class UpdateSignupFormParams:
     title: Optional[str] = None

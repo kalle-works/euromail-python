@@ -55,6 +55,9 @@ from euromail.types import (
     LinkClickStat,
     InsightReport,
     InsightFinding,
+    AgentMailbox,
+    MailboxMessage,
+    LeasedMessage,
 )
 
 DEFAULT_BASE_URL = "https://api.euromail.dev"
@@ -916,6 +919,109 @@ class EuroMail:
             acknowledged_at=data.get("acknowledged_at"),
             input_tokens=data.get("input_tokens"),
             output_tokens=data.get("output_tokens"),
+        )
+
+    # ---- Agent Mailbox Methods ----
+
+    def create_mailbox(
+        self,
+        *,
+        display_name: Optional[str] = None,
+        local_part: Optional[str] = None,
+        domain_id: Optional[str] = None,
+    ) -> AgentMailbox:
+        payload: dict[str, Any] = {}
+        if display_name is not None:
+            payload["display_name"] = display_name
+        if local_part is not None:
+            payload["local_part"] = local_part
+        if domain_id is not None:
+            payload["domain_id"] = domain_id
+        data = self._post("/v1/agent-mailboxes", payload)
+        return AgentMailbox(**data["data"])
+
+    def list_mailboxes(
+        self, *, limit: Optional[int] = None, offset: Optional[int] = None
+    ) -> list[AgentMailbox]:
+        params: dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = self._get("/v1/agent-mailboxes", params=params or None)
+        return [AgentMailbox(**m) for m in data["data"]]
+
+    def get_mailbox(self, id: str) -> AgentMailbox:
+        data = self._get(f"/v1/agent-mailboxes/{id}")
+        return AgentMailbox(**data["data"])
+
+    def delete_mailbox(self, id: str) -> None:
+        self._delete(f"/v1/agent-mailboxes/{id}")
+
+    def list_messages(
+        self,
+        mailbox_id: str,
+        *,
+        status: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MailboxMessage]:
+        params: dict[str, Any] = {}
+        if status is not None:
+            params["status"] = status
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages",
+            params=params or None,
+        )
+        return [MailboxMessage(**m) for m in data["data"]]
+
+    def wait_for_next_message(
+        self, mailbox_id: str, *, timeout: Optional[int] = None
+    ) -> Optional[LeasedMessage]:
+        """Long-poll for the next unread message.
+
+        Returns ``None`` when the server returns HTTP 408 (no message became
+        available before the server-side poll timeout elapsed). Note that the
+        HTTP client timeout should exceed ``timeout`` seconds, otherwise the
+        underlying httpx call will raise before the server responds.
+        """
+        params: dict[str, Any] = {}
+        if timeout is not None:
+            params["timeout"] = timeout
+        response = self._client.get(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/next",
+            params=params or None,
+        )
+        if response.status_code == 408:
+            return None
+        data = self._handle_response(response)
+        return LeasedMessage(
+            data=MailboxMessage(**data["data"]),
+            lease_token=data["lease_token"],
+            lease_expires_at=data["lease_expires_at"],
+        )
+
+    def delete_message(self, mailbox_id: str, message_id: str) -> None:
+        self._delete(f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}")
+
+    def ack_message(
+        self, mailbox_id: str, message_id: str, lease_token: str
+    ) -> None:
+        self._post(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/ack",
+            {"lease_token": lease_token},
+        )
+
+    def nack_message(
+        self, mailbox_id: str, message_id: str, lease_token: str
+    ) -> None:
+        self._post(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/nack",
+            {"lease_token": lease_token},
         )
 
     # ---- GDPR Methods ----

@@ -449,49 +449,55 @@ except EuroMailError as e:
 
 ## Agent Mailboxes
 
-Agent mailboxes provide persistent email addresses for AI agents with at-least-once message delivery via a lease/ack/nack model. Native SDK support is coming in a future release. In the meantime, use `httpx` directly (the same HTTP layer this SDK is built on):
+Agent mailboxes provide persistent email addresses for AI agents with at-least-once message delivery via a lease/ack/nack model. The SDK wraps the full flow — create, long-poll, ack/nack — with typed dataclasses.
 
 ```python
-import os
-import httpx
+from euromail import EuroMail
 
-API = "https://api.euromail.dev"
-headers = {"X-EuroMail-Api-Key": os.environ["EUROMAIL_API_KEY"]}
+client = EuroMail()
 
-with httpx.Client(base_url=API, headers=headers, timeout=35) as http:
-    # Create a mailbox
-    mailbox = http.post(
-        "/v1/agent-mailboxes",
-        json={"display_name": "Support Agent"},
-    ).json()["data"]
+# Create a mailbox (auto-assigns a local_part if omitted)
+mailbox = client.create_mailbox(display_name="Support Agent")
+print(mailbox.address)
 
-    while True:
-        # Long-poll for the next message (acquires a 5-minute lease)
-        r = http.get(
-            f"/v1/agent-mailboxes/{mailbox['id']}/messages/next",
-            params={"timeout": 30},
-        )
-        if r.status_code == 408:
-            continue  # no message, poll again
-        body = r.json()
-        msg, token = body["data"], body["lease_token"]
+while True:
+    # Long-poll for the next message. Returns None on HTTP 408
+    # (no message arrived before the server-side timeout elapsed).
+    leased = client.wait_for_next_message(mailbox.id, timeout=30)
+    if leased is None:
+        continue
 
-        try:
-            handle(msg)
-        except Exception:
-            # Nack to return the message to the queue for retry
-            http.post(
-                f"/v1/agent-mailboxes/{mailbox['id']}/messages/{msg['id']}/nack",
-                json={"lease_token": token},
-            )
-            raise
+    msg = leased.data
+    try:
+        handle(msg)
+    except Exception:
+        # Nack returns the message to the queue for redelivery.
+        client.nack_message(mailbox.id, msg.id, leased.lease_token)
+        raise
 
-        # Ack when done — message will not be redelivered
-        http.post(
-            f"/v1/agent-mailboxes/{mailbox['id']}/messages/{msg['id']}/ack",
-            json={"lease_token": token},
-        )
+    # Ack when done — message will not be redelivered.
+    client.ack_message(mailbox.id, msg.id, leased.lease_token)
 ```
+
+The async client mirrors the sync API:
+
+```python
+import asyncio
+from euromail import AsyncEuroMail
+
+async def main():
+    async with AsyncEuroMail() as client:
+        mailbox = await client.create_mailbox(display_name="Support Agent")
+        leased = await client.wait_for_next_message(mailbox.id, timeout=30)
+        if leased:
+            await client.ack_message(mailbox.id, leased.data.id, leased.lease_token)
+
+asyncio.run(main())
+```
+
+Tip: when using `wait_for_next_message(timeout=N)`, make sure the client's HTTP
+timeout exceeds `N` seconds (pass `timeout=` when constructing `EuroMail` /
+`AsyncEuroMail`), otherwise httpx will raise before the server responds.
 
 See the [Agent Mailboxes guide](https://euromail.dev/docs/guides/agent-mailboxes/) for the full flow, duplicate handling, and horizontal scaling patterns.
 

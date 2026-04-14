@@ -57,6 +57,9 @@ from euromail.types import (
     InsightArea,
     InsightFinding,
     InsightReport,
+    AgentMailbox,
+    MailboxMessage,
+    LeasedMessage,
 )
 
 __all__ = [
@@ -114,6 +117,9 @@ __all__ = [
     "InsightArea",
     "InsightFinding",
     "InsightReport",
+    "AgentMailbox",
+    "MailboxMessage",
+    "LeasedMessage",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
