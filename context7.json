@@ -1,0 +1,25 @@
+{
+  "projectTitle": "EuroMail Python SDK",
+  "description": "Official Python SDK for EuroMail — GDPR-compliant transactional email API with EU data residency. Send emails, manage domains, templates, webhooks, contact lists, signup forms, newsletters, inbound email, and AI agent mailboxes.",
+  "folders": [
+    "src",
+    "examples"
+  ],
+  "excludeFolders": [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "dist"
+  ],
+  "rules": [
+    "Install with: pip install euromail",
+    "Import: from euromail import EuroMail",
+    "Initialize: client = EuroMail(api_key=os.environ['EUROMAIL_API_KEY'])",
+    "send_email() returns a dataclass with .id and .status where status is 'queued' (202 Accepted, not 201)",
+    "Use template_alias (string) not template_id when sending with a template",
+    "The from_address must use the apex domain (e.g. noreply@example.com), not the sending subdomain",
+    "Webhook signature header: X-Euromail-Signature: t={timestamp},v1={hex} — verify with HMAC-SHA256",
+    "Agent mailbox: get_next_mailbox_message() → process → ack_mailbox_message() with lease_token",
+    "Batch: send_batch() supports up to 500 emails per request"
+  ]
+}
