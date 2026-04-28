@@ -1,6 +1,6 @@
 {
   "projectTitle": "EuroMail Python SDK",
-  "description": "Official Python SDK for EuroMail — GDPR-compliant transactional email API with EU data residency. Send emails, manage domains, templates, webhooks, contact lists, signup forms, newsletters, inbound email, and AI agent mailboxes.",
+  "description": "Python SDK for EuroMail — GDPR-compliant transactional email API (EU data residency, Finland). Send emails, manage domains, templates, webhooks, contact lists, and AI agent mailboxes.",
   "folders": [
     "src",
     "examples"
