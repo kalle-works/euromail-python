@@ -15,6 +15,7 @@ from euromail.types import (
     AnalyticsSummary,
     ApiKey,
     ApiKeyCreated,
+    Attachment,
     AuditLog,
     BatchError,
     BatchResponse,
@@ -136,6 +137,11 @@ class EuroMail:
         tags: Optional[list[str]] = None,
         metadata: Optional[dict[str, str]] = None,
         idempotency_key: Optional[str] = None,
+        attachments: Optional[list[Attachment]] = None,
+        send_at: Optional[str] = None,
+        tracking: Optional[bool] = None,
+        transactional: Optional[bool] = None,
+        stream: Optional[str] = None,
     ) -> SendEmailResponse:
         params = SendEmailParams(
             from_address=from_address,
@@ -152,6 +158,11 @@ class EuroMail:
             tags=tags,
             metadata=metadata,
             idempotency_key=idempotency_key,
+            attachments=attachments,
+            send_at=send_at,
+            tracking=tracking,
+            transactional=transactional,
+            stream=stream,
         )
         data = self._post("/v1/emails", params.to_dict())
         return SendEmailResponse(**data["data"])
@@ -213,6 +224,8 @@ class EuroMail:
         headers: Optional[dict[str, str]] = None,
         tags: Optional[list[str]] = None,
         send_at: Optional[str] = None,
+        tracking: Optional[bool] = None,
+        transactional: Optional[bool] = None,
     ) -> BroadcastResponse:
         payload: dict[str, Any] = {
             "contact_list_id": contact_list_id,
@@ -236,6 +249,10 @@ class EuroMail:
             payload["tags"] = tags
         if send_at is not None:
             payload["send_at"] = send_at
+        if tracking is not None:
+            payload["tracking"] = tracking
+        if transactional is not None:
+            payload["transactional"] = transactional
         data = self._post("/v1/emails/broadcast", payload)
         return BroadcastResponse(**data["data"])
 

@@ -40,6 +40,21 @@ T = TypeVar("T")
 
 
 @dataclass
+class Attachment:
+    filename: str
+    content: str
+    """Base64-encoded file content."""
+    content_type: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "filename": self.filename,
+            "content": self.content,
+            "content_type": self.content_type,
+        }
+
+
+@dataclass
 class SendEmailParams:
     from_address: str
     to: "str | list[str]"
@@ -55,6 +70,20 @@ class SendEmailParams:
     tags: Optional[list[str]] = None
     metadata: Optional[dict[str, str]] = None
     idempotency_key: Optional[str] = None
+    attachments: Optional[list[Attachment]] = None
+    send_at: Optional[str] = None
+    """Schedule delivery for a future RFC 3339 timestamp."""
+    tracking: Optional[bool] = None
+    """Per-email open/click tracking override. Omit to use the account default."""
+    transactional: Optional[bool] = None
+    """Whether this is a transactional email. The server defaults this to `True`,
+    which omits `List-Unsubscribe` headers so Gmail routes the message to Primary
+    instead of Promotions. Set to `False` for marketing/newsletter emails that
+    need one-click unsubscribe."""
+    stream: Optional[str] = None
+    """Message stream slug. Routes this email through the named stream, enabling
+    separate reputation tracking for transactional vs. marketing email. Defaults
+    to `"transactional"`; the stream must exist on the account."""
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -85,6 +114,16 @@ class SendEmailParams:
             d["metadata"] = self.metadata
         if self.idempotency_key is not None:
             d["idempotency_key"] = self.idempotency_key
+        if self.attachments is not None:
+            d["attachments"] = [a.to_dict() for a in self.attachments]
+        if self.send_at is not None:
+            d["send_at"] = self.send_at
+        if self.tracking is not None:
+            d["tracking"] = self.tracking
+        if self.transactional is not None:
+            d["transactional"] = self.transactional
+        if self.stream is not None:
+            d["stream"] = self.stream
         return d
 
 

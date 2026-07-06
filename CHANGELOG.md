@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-07-07
+
+### Added
+
+- `send_email`/`send_batch` (sync + async): `attachments`, `send_at` (schedule
+  delivery), `tracking` (per-email open/click override), `transactional`
+  (opt out of the default `List-Unsubscribe`-suppressing behavior for
+  marketing/newsletter sends), and `stream` (route through a named message
+  stream) — brings the SDK up to date with the current `/v1/emails` API.
+  Attachments were previously unsupported by this SDK entirely.
+- `send_broadcast` (sync + async): `tracking` and `transactional` overrides.
+- New `Attachment` dataclass exported from the top-level `euromail` package.
+
 ## [0.2.0] - 2026-04-13
 
 ### Added

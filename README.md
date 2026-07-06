@@ -135,6 +135,21 @@ client.send_email(
 )
 ```
 
+### Scheduling, tracking, and marketing sends
+
+```python
+client.send_email(
+    from_address="news@yourdomain.com",
+    to="user@example.com",
+    subject="This week in your inbox",
+    html_body="<p>Latest updates...</p>",
+    send_at="2026-08-01T09:00:00Z",  # schedule delivery
+    tracking=True,  # per-email open/click override
+    transactional=False,  # adds List-Unsubscribe for marketing/newsletter mail
+    stream="marketing",  # isolate reputation from transactional sends
+)
+```
+
 ### Retrieve and list emails
 
 ```python
