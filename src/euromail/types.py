@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Generic, Literal, Optional, TypeVar
+from typing import Any, Generic, Literal, Optional, TypedDict, TypeVar
 
 EmailStatus = Literal[
     "queued", "processing", "sent", "delivered", "bounced", "failed", "rejected"
@@ -40,6 +40,21 @@ T = TypeVar("T")
 
 
 @dataclass
+class Attachment:
+    filename: str
+    content: str
+    """Base64-encoded file content."""
+    content_type: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "filename": self.filename,
+            "content": self.content,
+            "content_type": self.content_type,
+        }
+
+
+@dataclass
 class SendEmailParams:
     from_address: str
     to: "str | list[str]"
@@ -55,6 +70,20 @@ class SendEmailParams:
     tags: Optional[list[str]] = None
     metadata: Optional[dict[str, str]] = None
     idempotency_key: Optional[str] = None
+    attachments: Optional[list[Attachment]] = None
+    send_at: Optional[str] = None
+    """Schedule delivery for a future RFC 3339 timestamp."""
+    tracking: Optional[bool] = None
+    """Per-email open/click tracking override. Omit to use the account default."""
+    transactional: Optional[bool] = None
+    """Whether this is a transactional email. The server defaults this to `True`,
+    which omits `List-Unsubscribe` headers so Gmail routes the message to Primary
+    instead of Promotions. Set to `False` for marketing/newsletter emails that
+    need one-click unsubscribe."""
+    stream: Optional[str] = None
+    """Message stream slug. Routes this email through the named stream, enabling
+    separate reputation tracking for transactional vs. marketing email. Defaults
+    to `"transactional"`; the stream must exist on the account."""
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -85,6 +114,16 @@ class SendEmailParams:
             d["metadata"] = self.metadata
         if self.idempotency_key is not None:
             d["idempotency_key"] = self.idempotency_key
+        if self.attachments is not None:
+            d["attachments"] = [a.to_dict() for a in self.attachments]
+        if self.send_at is not None:
+            d["send_at"] = self.send_at
+        if self.tracking is not None:
+            d["tracking"] = self.tracking
+        if self.transactional is not None:
+            d["transactional"] = self.transactional
+        if self.stream is not None:
+            d["stream"] = self.stream
         return d
 
 
@@ -660,6 +699,9 @@ class AgentMailbox:
     address: str
     display_name: Optional[str]
     created_at: str
+    auto_responder_enabled: bool = False
+    auto_responder_rules: Any = None
+    webhook_filters: Optional[Any] = None
 
 
 @dataclass
@@ -679,6 +721,15 @@ class MailboxMessage:
     thread_id: Optional[str] = None
     labels: list[str] = field(default_factory=list)
     read_at: Optional[str] = None
+    in_reply_to: Optional[str] = None
+    references_header: Optional[str] = None
+    attachments_stored: bool = False
+    attachments_metadata: Optional[Any] = None
+    classification: Optional[str] = None
+    classification_confidence: Optional[float] = None
+    classified_at: Optional[str] = None
+    leased_until: Optional[str] = None
+    lease_token: Optional[str] = None
 
 
 @dataclass
@@ -686,6 +737,50 @@ class LeasedMessage:
     data: MailboxMessage
     lease_token: str
     lease_expires_at: str
+
+
+@dataclass
+class MailboxReplyResult:
+    id: str
+    status: str
+    message_id: str
+    to: str
+    subject: str
+
+
+class MailboxAttachmentUrl(TypedDict, total=False):
+    """A pre-signed attachment download URL.
+
+    When a message's attachments were persisted to object storage, each item
+    has ``filename``, ``content_type``, ``size``, ``url``, and
+    ``expires_in_seconds`` (1-hour expiry). If the attachments were never
+    persisted, the server falls back to returning the raw stored metadata
+    array, which may omit ``url``/``expires_in_seconds`` or carry different
+    fields — hence every key here is optional.
+    """
+
+    filename: str
+    content_type: str
+    size: int
+    url: str
+    expires_in_seconds: int
+
+
+@dataclass
+class MailboxContact:
+    email: str
+    message_count: int
+    last_seen: str
+    display_name: Optional[str] = None
+
+
+@dataclass
+class MailboxAnalytics:
+    total_messages: int
+    unread_messages: int
+    total_threads: int
+    messages_today: int
+    messages_this_week: int
 
 
 @dataclass

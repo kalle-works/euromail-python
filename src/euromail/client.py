@@ -15,6 +15,7 @@ from euromail.types import (
     AnalyticsSummary,
     ApiKey,
     ApiKeyCreated,
+    Attachment,
     AuditLog,
     BatchError,
     BatchResponse,
@@ -58,6 +59,10 @@ from euromail.types import (
     AgentMailbox,
     MailboxMessage,
     LeasedMessage,
+    MailboxReplyResult,
+    MailboxAttachmentUrl,
+    MailboxContact,
+    MailboxAnalytics,
 )
 
 DEFAULT_BASE_URL = "https://api.euromail.dev"
@@ -136,6 +141,11 @@ class EuroMail:
         tags: Optional[list[str]] = None,
         metadata: Optional[dict[str, str]] = None,
         idempotency_key: Optional[str] = None,
+        attachments: Optional[list[Attachment]] = None,
+        send_at: Optional[str] = None,
+        tracking: Optional[bool] = None,
+        transactional: Optional[bool] = None,
+        stream: Optional[str] = None,
     ) -> SendEmailResponse:
         params = SendEmailParams(
             from_address=from_address,
@@ -152,6 +162,11 @@ class EuroMail:
             tags=tags,
             metadata=metadata,
             idempotency_key=idempotency_key,
+            attachments=attachments,
+            send_at=send_at,
+            tracking=tracking,
+            transactional=transactional,
+            stream=stream,
         )
         data = self._post("/v1/emails", params.to_dict())
         return SendEmailResponse(**data["data"])
@@ -213,6 +228,8 @@ class EuroMail:
         headers: Optional[dict[str, str]] = None,
         tags: Optional[list[str]] = None,
         send_at: Optional[str] = None,
+        tracking: Optional[bool] = None,
+        transactional: Optional[bool] = None,
     ) -> BroadcastResponse:
         payload: dict[str, Any] = {
             "contact_list_id": contact_list_id,
@@ -236,6 +253,10 @@ class EuroMail:
             payload["tags"] = tags
         if send_at is not None:
             payload["send_at"] = send_at
+        if tracking is not None:
+            payload["tracking"] = tracking
+        if transactional is not None:
+            payload["transactional"] = transactional
         data = self._post("/v1/emails/broadcast", payload)
         return BroadcastResponse(**data["data"])
 
@@ -1023,6 +1044,138 @@ class EuroMail:
             f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/nack",
             {"lease_token": lease_token},
         )
+
+    def reply_to_message(
+        self,
+        mailbox_id: str,
+        message_id: str,
+        *,
+        text_body: Optional[str] = None,
+        html_body: Optional[str] = None,
+    ) -> MailboxReplyResult:
+        payload: dict[str, Any] = {}
+        if text_body is not None:
+            payload["text_body"] = text_body
+        if html_body is not None:
+            payload["html_body"] = html_body
+        data = self._post(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/reply",
+            payload,
+        )
+        return MailboxReplyResult(**data["data"])
+
+    def list_mailbox_threads(
+        self,
+        mailbox_id: str,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MailboxMessage]:
+        params: dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/threads",
+            params=params or None,
+        )
+        return [MailboxMessage(**m) for m in data["data"]]
+
+    def get_mailbox_thread(
+        self,
+        mailbox_id: str,
+        thread_id: str,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MailboxMessage]:
+        params: dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/threads/{thread_id}",
+            params=params or None,
+        )
+        return [MailboxMessage(**m) for m in data["data"]]
+
+    def search_mailbox_messages(
+        self,
+        mailbox_id: str,
+        query: str,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MailboxMessage]:
+        params: dict[str, Any] = {"q": query}
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/search",
+            params=params,
+        )
+        return [MailboxMessage(**m) for m in data["data"]]
+
+    def update_message_labels(
+        self, mailbox_id: str, message_id: str, labels: list[str]
+    ) -> list[str]:
+        data = self._put(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/labels",
+            {"labels": labels},
+        )
+        return data["data"]["labels"]
+
+    def get_message_attachment_urls(
+        self, mailbox_id: str, message_id: str
+    ) -> list[MailboxAttachmentUrl]:
+        data = self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/attachments"
+        )
+        return data["data"]
+
+    def list_mailbox_contacts(
+        self,
+        mailbox_id: str,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MailboxContact]:
+        params: dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/contacts",
+            params=params or None,
+        )
+        return [MailboxContact(**c) for c in data["data"]]
+
+    def get_mailbox_analytics(self, mailbox_id: str) -> MailboxAnalytics:
+        data = self._get(f"/v1/agent-mailboxes/{mailbox_id}/analytics")
+        return MailboxAnalytics(**data["data"])
+
+    def update_auto_responder(
+        self,
+        mailbox_id: str,
+        *,
+        enabled: Optional[bool] = None,
+        rules: Optional[Any] = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {}
+        if enabled is not None:
+            payload["enabled"] = enabled
+        if rules is not None:
+            payload["rules"] = rules
+        data = self._patch(
+            f"/v1/agent-mailboxes/{mailbox_id}/auto-responder",
+            payload,
+        )
+        return data["data"]
 
     # ---- GDPR Methods ----
 
