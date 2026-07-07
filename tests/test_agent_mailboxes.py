@@ -6,7 +6,18 @@ import httpx
 import pytest
 import respx
 
-from euromail import AgentMailbox, AsyncEuroMail, EuroMail, LeasedMessage, MailboxMessage
+import json as _json
+
+from euromail import (
+    AgentMailbox,
+    AsyncEuroMail,
+    EuroMail,
+    LeasedMessage,
+    MailboxAnalytics,
+    MailboxContact,
+    MailboxMessage,
+    MailboxReplyResult,
+)
 
 
 BASE_URL = "https://api.euromail.test"
@@ -187,3 +198,294 @@ async def test_async_ack_message(async_client):
     ).mock(return_value=httpx.Response(204))
     await async_client.ack_message("mb_123", "msg_1", "tok_abc")
     assert route.called
+
+
+# ---- Parity methods (sync) ----
+
+
+REPLY_PAYLOAD = {
+    "id": "eml_1",
+    "status": "queued",
+    "message_id": "<reply@agents.example.com>",
+    "to": "sender@example.com",
+    "subject": "Re: hello",
+}
+
+
+@respx.mock
+def test_reply_to_message(sync_client):
+    route = respx.post(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/msg_1/reply"
+    ).mock(return_value=httpx.Response(201, json={"data": REPLY_PAYLOAD}))
+    result = sync_client.reply_to_message(
+        "mb_123", "msg_1", text_body="thanks!"
+    )
+    assert route.called
+    assert _json.loads(route.calls.last.request.content) == {"text_body": "thanks!"}
+    assert isinstance(result, MailboxReplyResult)
+    assert result.id == "eml_1"
+    assert result.subject == "Re: hello"
+
+
+@respx.mock
+def test_reply_to_message_html_only(sync_client):
+    route = respx.post(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/msg_1/reply"
+    ).mock(return_value=httpx.Response(201, json={"data": REPLY_PAYLOAD}))
+    sync_client.reply_to_message("mb_123", "msg_1", html_body="<p>hi</p>")
+    assert _json.loads(route.calls.last.request.content) == {"html_body": "<p>hi</p>"}
+
+
+@respx.mock
+def test_list_mailbox_threads(sync_client):
+    route = respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/threads").mock(
+        return_value=httpx.Response(200, json={"data": [MESSAGE_PAYLOAD]})
+    )
+    threads = sync_client.list_mailbox_threads("mb_123", limit=5, offset=10)
+    assert threads[0].id == "msg_1"
+    assert route.calls.last.request.url.params["limit"] == "5"
+    assert route.calls.last.request.url.params["offset"] == "10"
+
+
+@respx.mock
+def test_get_mailbox_thread(sync_client):
+    respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/threads/thr_1").mock(
+        return_value=httpx.Response(200, json={"data": [MESSAGE_PAYLOAD]})
+    )
+    thread = sync_client.get_mailbox_thread("mb_123", "thr_1")
+    assert len(thread) == 1
+    assert isinstance(thread[0], MailboxMessage)
+
+
+@respx.mock
+def test_search_mailbox_messages(sync_client):
+    route = respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/search").mock(
+        return_value=httpx.Response(200, json={"data": [MESSAGE_PAYLOAD]})
+    )
+    results = sync_client.search_mailbox_messages("mb_123", "invoice", limit=3)
+    assert results[0].id == "msg_1"
+    assert route.calls.last.request.url.params["q"] == "invoice"
+    assert route.calls.last.request.url.params["limit"] == "3"
+
+
+@respx.mock
+def test_update_message_labels(sync_client):
+    route = respx.put(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/msg_1/labels"
+    ).mock(
+        return_value=httpx.Response(
+            200, json={"data": {"labels": ["urgent", "billing"]}}
+        )
+    )
+    labels = sync_client.update_message_labels("mb_123", "msg_1", ["urgent", "billing"])
+    assert labels == ["urgent", "billing"]
+    assert _json.loads(route.calls.last.request.content) == {
+        "labels": ["urgent", "billing"]
+    }
+
+
+@respx.mock
+def test_get_message_attachment_urls(sync_client):
+    payload = [
+        {
+            "filename": "invoice.pdf",
+            "content_type": "application/pdf",
+            "size": 1024,
+            "url": "https://storage.example/invoice.pdf?sig=abc",
+            "expires_in_seconds": 3600,
+        }
+    ]
+    respx.get(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/msg_1/attachments"
+    ).mock(return_value=httpx.Response(200, json={"data": payload}))
+    urls = sync_client.get_message_attachment_urls("mb_123", "msg_1")
+    assert urls[0]["url"].startswith("https://storage.example")
+    assert urls[0]["expires_in_seconds"] == 3600
+
+
+@respx.mock
+def test_get_message_attachment_urls_fallback_metadata(sync_client):
+    # When attachments were never persisted to storage, the server returns the
+    # raw stored metadata array, which may lack url/expires_in_seconds.
+    payload = [{"filename": "note.txt", "content_type": "text/plain"}]
+    respx.get(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/msg_1/attachments"
+    ).mock(return_value=httpx.Response(200, json={"data": payload}))
+    urls = sync_client.get_message_attachment_urls("mb_123", "msg_1")
+    assert urls[0]["filename"] == "note.txt"
+    assert "url" not in urls[0]
+
+
+@respx.mock
+def test_list_mailbox_contacts(sync_client):
+    payload = [
+        {
+            "email": "sender@example.com",
+            "display_name": "Sender",
+            "message_count": 3,
+            "last_seen": "2026-04-13T12:01:00Z",
+        }
+    ]
+    respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/contacts").mock(
+        return_value=httpx.Response(200, json={"data": payload})
+    )
+    contacts = sync_client.list_mailbox_contacts("mb_123")
+    assert isinstance(contacts[0], MailboxContact)
+    assert contacts[0].message_count == 3
+
+
+@respx.mock
+def test_get_mailbox_analytics(sync_client):
+    payload = {
+        "total_messages": 10,
+        "unread_messages": 2,
+        "total_threads": 4,
+        "messages_today": 1,
+        "messages_this_week": 5,
+    }
+    respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/analytics").mock(
+        return_value=httpx.Response(200, json={"data": payload})
+    )
+    analytics = sync_client.get_mailbox_analytics("mb_123")
+    assert isinstance(analytics, MailboxAnalytics)
+    assert analytics.total_messages == 10
+    assert analytics.unread_messages == 2
+
+
+@respx.mock
+def test_update_auto_responder(sync_client):
+    rules = [{"match": "*", "action": {"reply_text": "Out of office"}}]
+    route = respx.patch(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/auto-responder"
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "data": {
+                    "auto_responder_enabled": True,
+                    "auto_responder_rules": rules,
+                }
+            },
+        )
+    )
+    result = sync_client.update_auto_responder("mb_123", enabled=True, rules=rules)
+    assert result["auto_responder_enabled"] is True
+    assert _json.loads(route.calls.last.request.content) == {
+        "enabled": True,
+        "rules": rules,
+    }
+
+
+# ---- Parity methods (async) ----
+
+
+@respx.mock
+async def test_async_reply_to_message(async_client):
+    respx.post(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/msg_1/reply"
+    ).mock(return_value=httpx.Response(201, json={"data": REPLY_PAYLOAD}))
+    result = await async_client.reply_to_message(
+        "mb_123", "msg_1", text_body="thanks!"
+    )
+    assert result.id == "eml_1"
+
+
+@respx.mock
+async def test_async_list_mailbox_threads(async_client):
+    respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/threads").mock(
+        return_value=httpx.Response(200, json={"data": [MESSAGE_PAYLOAD]})
+    )
+    threads = await async_client.list_mailbox_threads("mb_123")
+    assert threads[0].id == "msg_1"
+
+
+@respx.mock
+async def test_async_get_mailbox_thread(async_client):
+    respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/threads/thr_1").mock(
+        return_value=httpx.Response(200, json={"data": [MESSAGE_PAYLOAD]})
+    )
+    thread = await async_client.get_mailbox_thread("mb_123", "thr_1")
+    assert len(thread) == 1
+
+
+@respx.mock
+async def test_async_search_mailbox_messages(async_client):
+    route = respx.get(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/search"
+    ).mock(return_value=httpx.Response(200, json={"data": [MESSAGE_PAYLOAD]}))
+    results = await async_client.search_mailbox_messages("mb_123", "invoice")
+    assert results[0].id == "msg_1"
+    assert route.calls.last.request.url.params["q"] == "invoice"
+
+
+@respx.mock
+async def test_async_update_message_labels(async_client):
+    respx.put(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/msg_1/labels"
+    ).mock(return_value=httpx.Response(200, json={"data": {"labels": ["a"]}}))
+    labels = await async_client.update_message_labels("mb_123", "msg_1", ["a"])
+    assert labels == ["a"]
+
+
+@respx.mock
+async def test_async_get_message_attachment_urls_fallback(async_client):
+    payload = [{"filename": "note.txt", "content_type": "text/plain"}]
+    respx.get(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/messages/msg_1/attachments"
+    ).mock(return_value=httpx.Response(200, json={"data": payload}))
+    urls = await async_client.get_message_attachment_urls("mb_123", "msg_1")
+    assert urls[0]["filename"] == "note.txt"
+    assert "url" not in urls[0]
+
+
+@respx.mock
+async def test_async_list_mailbox_contacts(async_client):
+    payload = [
+        {
+            "email": "sender@example.com",
+            "display_name": None,
+            "message_count": 1,
+            "last_seen": "2026-04-13T12:01:00Z",
+        }
+    ]
+    respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/contacts").mock(
+        return_value=httpx.Response(200, json={"data": payload})
+    )
+    contacts = await async_client.list_mailbox_contacts("mb_123")
+    assert contacts[0].display_name is None
+
+
+@respx.mock
+async def test_async_get_mailbox_analytics(async_client):
+    payload = {
+        "total_messages": 0,
+        "unread_messages": 0,
+        "total_threads": 0,
+        "messages_today": 0,
+        "messages_this_week": 0,
+    }
+    respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/analytics").mock(
+        return_value=httpx.Response(200, json={"data": payload})
+    )
+    analytics = await async_client.get_mailbox_analytics("mb_123")
+    assert analytics.total_messages == 0
+
+
+@respx.mock
+async def test_async_update_auto_responder(async_client):
+    route = respx.patch(
+        f"{BASE_URL}/v1/agent-mailboxes/mb_123/auto-responder"
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "data": {
+                    "auto_responder_enabled": False,
+                    "auto_responder_rules": None,
+                }
+            },
+        )
+    )
+    result = await async_client.update_auto_responder("mb_123", enabled=False)
+    assert result["auto_responder_enabled"] is False
+    assert _json.loads(route.calls.last.request.content) == {"enabled": False}

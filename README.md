@@ -514,6 +514,38 @@ Tip: when using `wait_for_next_message(timeout=N)`, make sure the client's HTTP
 timeout exceeds `N` seconds (pass `timeout=` when constructing `EuroMail` /
 `AsyncEuroMail`), otherwise httpx will raise before the server responds.
 
+Beyond the lease/ack/nack loop, the SDK exposes the rest of the mailbox API
+(all mirrored on the async client):
+
+```python
+# Reply to a received message (enqueued through the normal send pipeline).
+reply = client.reply_to_message(mailbox.id, msg.id, text_body="On it!")
+
+# Threads: list the latest message per thread, or fetch a full thread.
+threads = client.list_mailbox_threads(mailbox.id)
+conversation = client.get_mailbox_thread(mailbox.id, threads[0].thread_id)
+
+# Full-text search across subject + body.
+hits = client.search_mailbox_messages(mailbox.id, "invoice")
+
+# Labels (full replace, not merge).
+labels = client.update_message_labels(mailbox.id, msg.id, ["urgent", "billing"])
+
+# Pre-signed attachment download URLs (1-hour expiry).
+attachments = client.get_message_attachment_urls(mailbox.id, msg.id)
+
+# Contacts seen by this mailbox, and summary analytics.
+contacts = client.list_mailbox_contacts(mailbox.id)
+stats = client.get_mailbox_analytics(mailbox.id)
+
+# Configure the auto-responder.
+client.update_auto_responder(
+    mailbox.id,
+    enabled=True,
+    rules=[{"match": "*", "action": {"reply_text": "Out of office"}}],
+)
+```
+
 See the [Agent Mailboxes guide](https://euromail.dev/docs/guides/agent-mailboxes/) for the full flow, duplicate handling, and horizontal scaling patterns.
 
 ## Requirements

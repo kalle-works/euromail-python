@@ -59,6 +59,10 @@ from euromail.types import (
     AgentMailbox,
     MailboxMessage,
     LeasedMessage,
+    MailboxReplyResult,
+    MailboxAttachmentUrl,
+    MailboxContact,
+    MailboxAnalytics,
 )
 
 DEFAULT_BASE_URL = "https://api.euromail.dev"
@@ -1053,6 +1057,138 @@ class AsyncEuroMail:
             f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/nack",
             {"lease_token": lease_token},
         )
+
+    async def reply_to_message(
+        self,
+        mailbox_id: str,
+        message_id: str,
+        *,
+        text_body: Optional[str] = None,
+        html_body: Optional[str] = None,
+    ) -> MailboxReplyResult:
+        payload: dict[str, Any] = {}
+        if text_body is not None:
+            payload["text_body"] = text_body
+        if html_body is not None:
+            payload["html_body"] = html_body
+        data = await self._post(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/reply",
+            payload,
+        )
+        return MailboxReplyResult(**data["data"])
+
+    async def list_mailbox_threads(
+        self,
+        mailbox_id: str,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MailboxMessage]:
+        params: dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = await self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/threads",
+            params=params or None,
+        )
+        return [MailboxMessage(**m) for m in data["data"]]
+
+    async def get_mailbox_thread(
+        self,
+        mailbox_id: str,
+        thread_id: str,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MailboxMessage]:
+        params: dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = await self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/threads/{thread_id}",
+            params=params or None,
+        )
+        return [MailboxMessage(**m) for m in data["data"]]
+
+    async def search_mailbox_messages(
+        self,
+        mailbox_id: str,
+        query: str,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MailboxMessage]:
+        params: dict[str, Any] = {"q": query}
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = await self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/search",
+            params=params,
+        )
+        return [MailboxMessage(**m) for m in data["data"]]
+
+    async def update_message_labels(
+        self, mailbox_id: str, message_id: str, labels: list[str]
+    ) -> list[str]:
+        data = await self._put(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/labels",
+            {"labels": labels},
+        )
+        return data["data"]["labels"]
+
+    async def get_message_attachment_urls(
+        self, mailbox_id: str, message_id: str
+    ) -> list[MailboxAttachmentUrl]:
+        data = await self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/messages/{message_id}/attachments"
+        )
+        return data["data"]
+
+    async def list_mailbox_contacts(
+        self,
+        mailbox_id: str,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MailboxContact]:
+        params: dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        data = await self._get(
+            f"/v1/agent-mailboxes/{mailbox_id}/contacts",
+            params=params or None,
+        )
+        return [MailboxContact(**c) for c in data["data"]]
+
+    async def get_mailbox_analytics(self, mailbox_id: str) -> MailboxAnalytics:
+        data = await self._get(f"/v1/agent-mailboxes/{mailbox_id}/analytics")
+        return MailboxAnalytics(**data["data"])
+
+    async def update_auto_responder(
+        self,
+        mailbox_id: str,
+        *,
+        enabled: Optional[bool] = None,
+        rules: Optional[Any] = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {}
+        if enabled is not None:
+            payload["enabled"] = enabled
+        if rules is not None:
+            payload["rules"] = rules
+        data = await self._patch(
+            f"/v1/agent-mailboxes/{mailbox_id}/auto-responder",
+            payload,
+        )
+        return data["data"]
 
     # ---- GDPR Methods ----
 

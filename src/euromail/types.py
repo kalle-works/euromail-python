@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Generic, Literal, Optional, TypeVar
+from typing import Any, Generic, Literal, Optional, TypedDict, TypeVar
 
 EmailStatus = Literal[
     "queued", "processing", "sent", "delivered", "bounced", "failed", "rejected"
@@ -699,6 +699,9 @@ class AgentMailbox:
     address: str
     display_name: Optional[str]
     created_at: str
+    auto_responder_enabled: bool = False
+    auto_responder_rules: Any = None
+    webhook_filters: Optional[Any] = None
 
 
 @dataclass
@@ -718,6 +721,15 @@ class MailboxMessage:
     thread_id: Optional[str] = None
     labels: list[str] = field(default_factory=list)
     read_at: Optional[str] = None
+    in_reply_to: Optional[str] = None
+    references_header: Optional[str] = None
+    attachments_stored: bool = False
+    attachments_metadata: Optional[Any] = None
+    classification: Optional[str] = None
+    classification_confidence: Optional[float] = None
+    classified_at: Optional[str] = None
+    leased_until: Optional[str] = None
+    lease_token: Optional[str] = None
 
 
 @dataclass
@@ -725,6 +737,50 @@ class LeasedMessage:
     data: MailboxMessage
     lease_token: str
     lease_expires_at: str
+
+
+@dataclass
+class MailboxReplyResult:
+    id: str
+    status: str
+    message_id: str
+    to: str
+    subject: str
+
+
+class MailboxAttachmentUrl(TypedDict, total=False):
+    """A pre-signed attachment download URL.
+
+    When a message's attachments were persisted to object storage, each item
+    has ``filename``, ``content_type``, ``size``, ``url``, and
+    ``expires_in_seconds`` (1-hour expiry). If the attachments were never
+    persisted, the server falls back to returning the raw stored metadata
+    array, which may omit ``url``/``expires_in_seconds`` or carry different
+    fields — hence every key here is optional.
+    """
+
+    filename: str
+    content_type: str
+    size: int
+    url: str
+    expires_in_seconds: int
+
+
+@dataclass
+class MailboxContact:
+    email: str
+    message_count: int
+    last_seen: str
+    display_name: Optional[str] = None
+
+
+@dataclass
+class MailboxAnalytics:
+    total_messages: int
+    unread_messages: int
+    total_threads: int
+    messages_today: int
+    messages_this_week: int
 
 
 @dataclass

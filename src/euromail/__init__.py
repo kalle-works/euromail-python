@@ -61,6 +61,10 @@ from euromail.types import (
     AgentMailbox,
     MailboxMessage,
     LeasedMessage,
+    MailboxReplyResult,
+    MailboxAttachmentUrl,
+    MailboxContact,
+    MailboxAnalytics,
 )
 
 __all__ = [
@@ -122,6 +126,10 @@ __all__ = [
     "AgentMailbox",
     "MailboxMessage",
     "LeasedMessage",
+    "MailboxReplyResult",
+    "MailboxAttachmentUrl",
+    "MailboxContact",
+    "MailboxAnalytics",
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.4.0"
