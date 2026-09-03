@@ -34,6 +34,7 @@ from euromail.types import (
     EmailValidation,
     GdprEraseResult,
     GdprExport,
+    ImportSuppressionsResult,
     InboundEmail,
     InboundRoute,
     Newsletter,
@@ -429,6 +430,20 @@ class EuroMail:
             total=pagination["total"],
             total_pages=pagination["total_pages"],
         )
+
+    def import_suppressions(
+        self, emails: list[str], *, reason: Optional[str] = None
+    ) -> ImportSuppressionsResult:
+        """Bulk-import up to 10,000 addresses in one call."""
+        payload: dict[str, Any] = {"emails": emails}
+        if reason is not None:
+            payload["reason"] = reason
+        data = _unwrap(self._post("/v1/suppressions/import", payload))
+        return ImportSuppressionsResult(**data)
+
+    def export_suppressions(self) -> str:
+        """Export the full suppression list as CSV."""
+        return self._get_raw("/v1/suppressions/export")
 
     # ---- Contact List Methods ----
 
@@ -1204,7 +1219,7 @@ class EuroMail:
                 body = response.json()
             except Exception:
                 body = {"code": "unknown", "message": response.text}
-            raise EuroMailError.from_response(response.status_code, body)
+            raise EuroMailError.from_response(response.status_code, body, headers=response.headers)
         return response.text
 
     def _post(self, path: str, json: Any) -> Any:
@@ -1229,7 +1244,7 @@ class EuroMail:
                 body = response.json()
             except Exception:
                 body = {"code": "unknown", "message": response.text}
-            raise EuroMailError.from_response(response.status_code, body)
+            raise EuroMailError.from_response(response.status_code, body, headers=response.headers)
 
         if response.status_code == 204:
             return None
