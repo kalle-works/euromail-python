@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-09-04
+
+### Added
+
+- `verify_signature()` (in `euromail.webhooks`, also exported from the
+  top-level package alongside `DEFAULT_TOLERANCE_SECONDS`) verifies a
+  webhook delivery's `X-Euromail-Signature` header against the raw request
+  body: `t=<unix_timestamp>,v1=<hex_hmac_sha256>`, constant-time compared,
+  with a default 300s timestamp tolerance and support for a secret-rotation
+  window carrying more than one `v1` entry.
+- `import_suppressions()` / `export_suppressions()` on both `EuroMail` and
+  `AsyncEuroMail`: bulk-import up to 10,000 addresses in one call
+  (`POST /v1/suppressions/import`) and export the full suppression list as
+  CSV (`GET /v1/suppressions/export`). New `ImportSuppressionsResult` type.
+- `ForbiddenError`, `NotFoundError`, `ConflictError`, and `ServerError`
+  exception classes, so 403/404/409/5xx responses raise something more
+  specific than the generic `EuroMailError`.
+
+### Fixed
+
+- `RateLimitError.retry_after` now reads the `Retry-After` HTTP response
+  header. It previously read a `retry_after` field from the JSON error
+  body, which the API has never sent — every `429` resolved to
+  `retry_after=None` regardless of the real wait time.
+- `ValidationError` now carries the actual response status (`400` or `422`
+  — the API returns validation failures at both, depending on the
+  endpoint) instead of assuming `422`.
+
 ## [0.4.0] - 2026-07-07
 
 ### Added

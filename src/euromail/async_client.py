@@ -34,6 +34,7 @@ from euromail.types import (
     EmailValidation,
     GdprEraseResult,
     GdprExport,
+    ImportSuppressionsResult,
     InboundEmail,
     InboundRoute,
     Newsletter,
@@ -437,6 +438,20 @@ class AsyncEuroMail:
             total=pagination["total"],
             total_pages=pagination["total_pages"],
         )
+
+    async def import_suppressions(
+        self, emails: list[str], *, reason: Optional[str] = None
+    ) -> ImportSuppressionsResult:
+        """Bulk-import up to 10,000 addresses in one call."""
+        payload: dict[str, Any] = {"emails": emails}
+        if reason is not None:
+            payload["reason"] = reason
+        data = _unwrap(await self._post("/v1/suppressions/import", payload))
+        return ImportSuppressionsResult(**data)
+
+    async def export_suppressions(self) -> str:
+        """Export the full suppression list as CSV."""
+        return await self._get_raw("/v1/suppressions/export")
 
     # ---- Contact List Methods ----
 
@@ -1219,7 +1234,7 @@ class AsyncEuroMail:
                 body = response.json()
             except Exception:
                 body = {"code": "unknown", "message": response.text}
-            raise EuroMailError.from_response(response.status_code, body)
+            raise EuroMailError.from_response(response.status_code, body, headers=response.headers)
         return response.text
 
     async def _post(self, path: str, json: Any) -> Any:
@@ -1244,7 +1259,7 @@ class AsyncEuroMail:
                 body = response.json()
             except Exception:
                 body = {"code": "unknown", "message": response.text}
-            raise EuroMailError.from_response(response.status_code, body)
+            raise EuroMailError.from_response(response.status_code, body, headers=response.headers)
 
         if response.status_code == 204:
             return None

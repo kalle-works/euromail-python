@@ -279,6 +279,15 @@ class Suppression:
 
 
 @dataclass
+class ImportSuppressionsResult:
+    """Result of a bulk suppression import (`POST /v1/suppressions/import`)."""
+
+    inserted: int
+    total_requested: int
+    invalid_addresses: list[str]
+
+
+@dataclass
 class Account:
     id: str
     name: str
