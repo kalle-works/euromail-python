@@ -7,7 +7,7 @@ name = "euromail"
 version = "0.5.0"
 description = "Official Python SDK for the EuroMail transactional email service"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 keywords = ["euromail", "email", "transactional", "smtp"]
 dependencies = [
@@ -16,9 +16,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.24",
-    "respx>=0.22",
+    "pytest>=9.0",
+    "pytest-asyncio>=1.0",
+    "respx>=0.23",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -26,4 +26,5 @@ packages = ["src/euromail"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
