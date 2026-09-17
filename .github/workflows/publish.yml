@@ -5,31 +5,41 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Build & Test
-    runs-on: ubuntu-latest
+    runs-on: kalle-works-arm64
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.14"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
-      - run: python -m pytest --no-header -q || true
+      - run: python -m pytest -q
       - run: pip install build && python -m build
 
   publish:
     name: Publish to PyPI
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # Trusted publishing is kept on GitHub-hosted runners.
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
+      contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install build && python -m build
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true

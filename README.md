@@ -550,7 +550,7 @@ See the [Agent Mailboxes guide](https://euromail.dev/docs/guides/agent-mailboxes
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - httpx >= 0.27
 
 ## License
