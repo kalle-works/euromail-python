@@ -282,7 +282,7 @@ inbound = client.list_inbound_emails(page=1, per_page=25)
 
 # Get details
 email = client.get_inbound_email("inbound-uuid")
-print(f"From: {email.from_address}, Subject: {email.subject}")
+print(f"From: {email.mail_from}, Subject: {email.subject}")
 
 # Delete
 client.delete_inbound_email("inbound-uuid")

@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-09-23
+
+### Fixed
+
+- Responses with fields this SDK does not know about no longer raise
+  `TypeError`. Every model was built straight from the response JSON, so
+  each field the API added broke the methods that returned it:
+  `get_webhook`, `list_webhooks`, `create_contact_list`,
+  `get_analytics_overview`, `list_messages`, `get_newsletter`,
+  `get_inbound_route`, `get_inbound_email`, `get_email_links`,
+  `get_mailbox_analytics` and others failed on every call. Models, including
+  nested ones and list items, now ignore unknown fields on both `EuroMail`
+  and `AsyncEuroMail`.
+- `InboundEmail` now uses the field names the API sends: `mail_from`,
+  `rcpt_to` and `size_bytes`, plus `status`, `updated_at`, the headers and
+  the rest of the record. The old `from_address`, `to_addresses` and
+  `raw_size` never matched the API, so `get_inbound_email` and
+  `list_inbound_emails` could not return anything before this release.
+- `generate_insights` no longer fails with `KeyError`. The API does not
+  return `period_start`, `period_end` or `model` for a new report, so those
+  `InsightReport` fields are now optional.
+- `get_domain`, `list_domains` and the other domain methods no longer crash
+  on a domain whose DNS provider has been detected. The API stores the
+  provider inside `dns_records` as a plain string, and the SDK tried to read
+  it as a DNS record (`ValueError`). It is now `Domain.detected_provider`,
+  and `dns_records` holds only `DnsRecord` values. A domain whose stored
+  `dns_records` is an empty list reads as `{}`.
+- `generate_insights` no longer fails when a finding lacks a key. Findings
+  are model-generated and the API stores them without validation, so every
+  `InsightFinding` field is now optional and defaults to `None`.
+
+### Added
+
+- Models now include fields the API was already returning:
+  `Webhook.created_for`, `ContactList.welcome_email_*`,
+  `AnalyticsSummary.total_failed`, `total_unique_opens`,
+  `total_unique_clicks` and `total_proxy_opens`, `InboundRoute.webhook_id`,
+  `Newsletter.tags`, `LinkClickStat.last_clicked_at`,
+  `MailboxMessage.direction`, `to_addresses`, `email_id` and `raw_headers`,
+  `MailboxAnalytics.sent_messages`, `Contact.welcome_email_sent_at`,
+  `Domain.sending_subdomain`, `SignupForm.from_address` and `messages`,
+  `BatchResponse.operation_id`, and the scheduling, retry, stream and
+  tracking fields on `Email`.
+
+### Changed
+
+- If you build these models yourself, for example in test mocks or with
+  positional arguments, these fields changed:
+  - `InboundEmail`: `from_address` is now `mail_from`, `to_addresses` is
+    now `rcpt_to`, `raw_size` is now `size_bytes`; `subject` is optional;
+    `status` and `updated_at` are new required fields.
+  - `InsightReport`: the required fields are now `id`, `generated_at` and
+    `summary`, in that order; `account_id`, `period_start`, `period_end`
+    and `model` moved after them and are optional.
+  - `InsightFinding`: all fields are optional.
+
 ## [0.5.0] - 2026-09-04
 
 ### Added

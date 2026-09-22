@@ -1,0 +1,31 @@
+{
+  "call": "create_contact_list",
+  "args": [],
+  "kwargs": {
+    "name": "Customers"
+  },
+  "request": [
+    "POST",
+    "/v1/contact-lists"
+  ],
+  "schema": "ContactList",
+  "response": {
+    "data": {
+      "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+      "created_at": "2026-09-22T10:00:00Z",
+      "description": "description-example",
+      "double_opt_in": true,
+      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+      "name": "name-example",
+      "updated_at": "2026-09-22T10:00:00Z",
+      "welcome_email_delay_seconds": 3,
+      "welcome_email_enabled": true,
+      "welcome_email_from_address": "welcome_email_from_address-example",
+      "welcome_email_html_body": "welcome_email_html_body-example",
+      "welcome_email_subject": "welcome_email_subject-example",
+      "welcome_email_template_id": "599bab9c-5fb1-5ecd-87fa-cfd7199ae93d",
+      "welcome_email_text_body": "welcome_email_text_body-example"
+    }
+  },
+  "expect": {}
+}
