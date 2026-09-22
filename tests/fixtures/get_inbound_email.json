@@ -1,0 +1,45 @@
+{
+  "call": "get_inbound_email",
+  "args": [
+    "c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/inbound/c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "schema": "InboundEmail",
+  "response": {
+    "data": {
+      "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+      "attachments": {
+        "example": "attachments"
+      },
+      "cc_header": "cc_header-example",
+      "created_at": "2026-09-22T10:00:00Z",
+      "domain_id": "9bd740f6-1eec-5db5-ae51-a0ba00848428",
+      "error_message": "error_message-example",
+      "from_header": "from_header-example",
+      "html_body": "html_body-example",
+      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+      "mail_from": "mail_from-example",
+      "message_id": "message_id-example",
+      "raw_headers": {
+        "example": "raw_headers"
+      },
+      "rcpt_to": [
+        "rcpt_to-example"
+      ],
+      "route_id": "65325af2-5834-5451-b406-23d30a844412",
+      "size_bytes": 3,
+      "source_ip": "source_ip-example",
+      "spf_result": "spf_result-example",
+      "status": "status-example",
+      "subject": "subject-example",
+      "text_body": "text_body-example",
+      "to_header": "to_header-example",
+      "updated_at": "2026-09-22T10:00:00Z",
+      "webhook_delivered_at": "2026-09-22T10:00:00Z"
+    }
+  }
+}

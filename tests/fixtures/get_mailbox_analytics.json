@@ -1,0 +1,22 @@
+{
+  "call": "get_mailbox_analytics",
+  "args": [
+    "c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/agent-mailboxes/c8e8c5a3-8050-506c-a5fb-de56aceb0032/analytics"
+  ],
+  "schema": "MailboxAnalytics",
+  "response": {
+    "data": {
+      "total_messages": 3,
+      "unread_messages": 3,
+      "total_threads": 3,
+      "messages_today": 3,
+      "messages_this_week": 3,
+      "sent_messages": 3
+    }
+  }
+}

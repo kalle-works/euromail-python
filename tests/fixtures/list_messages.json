@@ -1,0 +1,54 @@
+{
+  "call": "list_messages",
+  "args": [
+    "c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/agent-mailboxes/c8e8c5a3-8050-506c-a5fb-de56aceb0032/messages"
+  ],
+  "schema": "MailboxMessage",
+  "response": {
+    "data": [
+      {
+        "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+        "mailbox_id": "7d3886ba-8f9b-5ab7-9ce0-c8b016d81581",
+        "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+        "message_id": "message_id-example",
+        "mail_from": "mail_from-example",
+        "from_header": "from_header-example",
+        "reply_to": "reply_to-example",
+        "subject": "subject-example",
+        "text_body": "text_body-example",
+        "html_body": "html_body-example",
+        "raw_headers": {
+          "example": "raw_headers"
+        },
+        "size_bytes": 3,
+        "in_reply_to": "in_reply_to-example",
+        "references_header": "references_header-example",
+        "thread_id": "e582ab49-d916-534d-a1cd-f67295d0f431",
+        "attachments_stored": true,
+        "attachments_metadata": {
+          "example": "attachments_metadata"
+        },
+        "labels": [
+          "labels-example"
+        ],
+        "read_at": "2026-09-22T10:00:00Z",
+        "leased_until": "2026-09-22T10:00:00Z",
+        "lease_token": "ffbc7799-3ab5-5b4c-b834-2ef89e46dbe5",
+        "classification": "classification-example",
+        "classification_confidence": 0.5,
+        "classified_at": "2026-09-22T10:00:00Z",
+        "direction": "direction-example",
+        "to_addresses": [
+          "to_addresses-example"
+        ],
+        "email_id": "26fc76ed-f23e-54d0-b646-7420d7c3ce99",
+        "created_at": "2026-09-22T10:00:00Z"
+      }
+    ]
+  }
+}

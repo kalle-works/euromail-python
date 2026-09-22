@@ -1,0 +1,30 @@
+{
+  "call": "get_webhook",
+  "args": [
+    "c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/webhooks/c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "schema": "Webhook",
+  "response": {
+    "data": {
+      "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+      "created_at": "2026-09-22T10:00:00Z",
+      "created_for": "created_for-example",
+      "events": [
+        "events-example"
+      ],
+      "failure_count": 3,
+      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+      "is_active": true,
+      "last_failure_at": "2026-09-22T10:00:00Z",
+      "last_failure_reason": "last_failure_reason-example",
+      "last_success_at": "2026-09-22T10:00:00Z",
+      "updated_at": "2026-09-22T10:00:00Z",
+      "url": "url-example"
+    }
+  }
+}

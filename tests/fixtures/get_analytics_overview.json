@@ -1,0 +1,33 @@
+{
+  "call": "get_analytics_overview",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/analytics/overview"
+  ],
+  "schema": "AnalyticsSummary",
+  "response": {
+    "data": {
+      "total_sent": 3,
+      "total_delivered": 3,
+      "total_bounced": 3,
+      "total_failed": 3,
+      "total_opens": 3,
+      "total_unique_opens": 3,
+      "total_clicks": 3,
+      "total_unique_clicks": 3,
+      "total_unsubscribes": 3,
+      "total_proxy_opens": 3,
+      "delivery_rate_pct": 0.5,
+      "bounce_rate_pct": 0.5,
+      "open_rate_pct": 0.5,
+      "click_rate_pct": 0.5
+    },
+    "period": {
+      "from": "2026-08-23",
+      "to": "2026-09-22",
+      "days": 30
+    }
+  }
+}
