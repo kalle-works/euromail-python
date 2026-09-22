@@ -1,0 +1,88 @@
+{
+  "call": "get_domain",
+  "args": [
+    "c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/domains/c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "schema": "Domain",
+  "response": {
+    "data": {
+      "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+      "created_at": "2026-09-22T10:00:00Z",
+      "dkim_public_key": "dkim_public_key-example",
+      "dkim_selector": "dkim_selector-example",
+      "dkim_verified": true,
+      "dmarc_verified": true,
+      "dns_records": {
+        "dkim": {
+          "type": "TXT",
+          "host": "em1._domainkey.em.example.com",
+          "value": "v=DKIM1; k=rsa; p=MIIB"
+        },
+        "spf": {
+          "type": "TXT",
+          "host": "em.example.com",
+          "value": "v=spf1 include:spf.euromail.dev ~all"
+        },
+        "return_path": {
+          "type": "MX",
+          "host": "em.example.com",
+          "value": "bounce.euromail.dev",
+          "priority": 10
+        },
+        "dmarc": {
+          "type": "TXT",
+          "host": "_dmarc.example.com",
+          "value": "v=DMARC1; p=none"
+        },
+        "detected_provider": "cloudflare"
+      },
+      "domain": "domain-example",
+      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+      "inbound_enabled": true,
+      "mx_verified": true,
+      "mx_verified_at": "2026-09-22T10:00:00Z",
+      "return_path_verified": true,
+      "sending_subdomain": "sending_subdomain-example",
+      "spf_verified": true,
+      "tracking_domain": "tracking_domain-example",
+      "tracking_domain_verified": true,
+      "tracking_domain_verified_at": "2026-09-22T10:00:00Z",
+      "updated_at": "2026-09-22T10:00:00Z",
+      "verified_at": "2026-09-22T10:00:00Z"
+    }
+  },
+  "expect": {
+    "dns_records": {
+      "dkim": {
+        "priority": null,
+        "type": "TXT",
+        "host": "em1._domainkey.em.example.com",
+        "value": "v=DKIM1; k=rsa; p=MIIB"
+      },
+      "spf": {
+        "priority": null,
+        "type": "TXT",
+        "host": "em.example.com",
+        "value": "v=spf1 include:spf.euromail.dev ~all"
+      },
+      "return_path": {
+        "priority": 10,
+        "type": "MX",
+        "host": "em.example.com",
+        "value": "bounce.euromail.dev"
+      },
+      "dmarc": {
+        "priority": null,
+        "type": "TXT",
+        "host": "_dmarc.example.com",
+        "value": "v=DMARC1; p=none"
+      }
+    },
+    "detected_provider": "cloudflare"
+  }
+}

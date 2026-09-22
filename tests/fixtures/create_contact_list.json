@@ -26,5 +26,6 @@
       "welcome_email_template_id": "599bab9c-5fb1-5ecd-87fa-cfd7199ae93d",
       "welcome_email_text_body": "welcome_email_text_body-example"
     }
-  }
+  },
+  "expect": {}
 }

@@ -4,7 +4,8 @@ Each fixture in `tests/fixtures/` is the full response body of one SDK call,
 generated from the API's OpenAPI document by `tests/fixtures/generate.py`
 (see its docstring to regenerate). For every one, the call must succeed and
 every field the API sends must be readable on the returned model with the
-value the API sent.
+value the API sent, or with the value in the fixture's `expect` where the SDK
+reshapes it on purpose.
 """
 
 from __future__ import annotations
@@ -45,4 +46,5 @@ def test_call_exposes_every_field_the_api_sends(fixture):
         readable = dataclasses.asdict(model)
         missing = sorted(set(obj) - set(readable))
         assert missing == [], f"{type(model).__name__} does not expose {missing}"
-        assert {k: readable[k] for k in obj} == obj
+        expected = {**obj, **spec["expect"]}
+        assert {k: readable[k] for k in expected} == expected

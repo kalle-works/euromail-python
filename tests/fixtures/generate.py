@@ -169,6 +169,33 @@ SUPPLEMENT: dict[str, dict[str, Any]] = {
     },
 }
 
+# Values for properties whose schema is untyped (serde_json::Value), where a
+# placeholder object would not look like what the API stores.
+DNS_RECORDS = {
+    "dkim": {"type": "TXT", "host": "em1._domainkey.em.example.com", "value": "v=DKIM1; k=rsa; p=MIIB"},
+    "spf": {"type": "TXT", "host": "em.example.com", "value": "v=spf1 include:spf.euromail.dev ~all"},
+    "return_path": {"type": "MX", "host": "em.example.com", "value": "bounce.euromail.dev", "priority": 10},
+    "dmarc": {"type": "TXT", "host": "_dmarc.example.com", "value": "v=DMARC1; p=none"},
+    # Written by the API's DNS provider detection
+    # (crates/euromail-common/src/dns_verification.rs).
+    "detected_provider": "cloudflare",
+}
+UNTYPED_EXAMPLES: dict[tuple[str, str], Any] = {("Domain", "dns_records"): DNS_RECORDS}
+
+# Model values that differ from the wire on purpose, per schema: the SDK
+# lifts `detected_provider` out of `dns_records`, and a record without a
+# priority reads as `priority=None`.
+EXPECT: dict[str, dict[str, Any]] = {
+    "Domain": {
+        "dns_records": {
+            k: {"priority": None, **v}
+            for k, v in DNS_RECORDS.items()
+            if k != "detected_provider"
+        },
+        "detected_provider": "cloudflare",
+    },
+}
+
 ID = str(uuid.uuid5(UUID_NS, "path-id"))
 
 # name -> (SDK method, positional args, keyword args, HTTP method, path,
@@ -211,6 +238,9 @@ ENDPOINTS: dict[str, tuple[str, list[str], dict[str, str], str, str, str, str]] 
     "get_email_links": (
         "get_email_links", [ID], {}, "GET", f"/v1/emails/{ID}/links", "list", "LinkClickStat",
     ),
+    "get_domain": (
+        "get_domain", [ID], {}, "GET", f"/v1/domains/{ID}", "object", "Domain",
+    ),
     "get_mailbox_analytics": (
         "get_mailbox_analytics", [ID], {}, "GET", f"/v1/agent-mailboxes/{ID}/analytics",
         "object", "MailboxAnalytics",
@@ -218,7 +248,11 @@ ENDPOINTS: dict[str, tuple[str, list[str], dict[str, str], str, str, str, str]] 
 }
 
 
-def example(name: str, schema: dict[str, Any], schemas: dict[str, Any]) -> Any:
+def example(
+    name: str, schema: dict[str, Any], schemas: dict[str, Any], owner: str = ""
+) -> Any:
+    if (owner, name) in UNTYPED_EXAMPLES:
+        return UNTYPED_EXAMPLES[(owner, name)]
     if "$ref" in schema:
         return example(name, schemas[schema["$ref"].rsplit("/", 1)[1]], schemas)
     for key in ("oneOf", "anyOf", "allOf"):
@@ -245,7 +279,7 @@ def example(name: str, schema: dict[str, Any], schemas: dict[str, Any]) -> Any:
         return [example(name, schema.get("items", {}), schemas)]
     if kind == "object" or "properties" in schema:
         return {
-            prop: example(prop, sub, schemas)
+            prop: example(prop, sub, schemas, owner=name)
             for prop, sub in schema.get("properties", {}).items()
         }
     # An untyped schema (serde_json::Value on the Rust side).
@@ -278,6 +312,7 @@ def main(openapi_path: str) -> None:
             "request": [method, path],
             "schema": schema,
             "response": body,
+            "expect": EXPECT.get(schema, {}),
         }
         (HERE / f"{name}.json").write_text(json.dumps(fixture, indent=2) + "\n")
         print(f"wrote {name}.json")

@@ -265,6 +265,22 @@ class Domain:
     tracking_domain_verified: bool = False
     tracking_domain_verified_at: Optional[str] = None
     sending_subdomain: Optional[str] = None
+    detected_provider: Optional[str] = None
+    """DNS host detected for the domain (e.g. `"cloudflare"`), if any."""
+
+    @staticmethod
+    def _normalize(data: Mapping[str, Any]) -> dict[str, Any]:
+        # The API keeps the detected DNS provider inside `dns_records` as a
+        # plain string next to the records, and a domain row can hold `[]`
+        # there instead of an object.
+        data = dict(data)
+        raw = data.get("dns_records")
+        records = raw if isinstance(raw, Mapping) else {}
+        provider = records.get("detected_provider")
+        if data.get("detected_provider") is None and isinstance(provider, str):
+            data["detected_provider"] = provider
+        data["dns_records"] = {k: v for k, v in records.items() if isinstance(v, Mapping)}
+        return data
 
 
 @dataclass
@@ -744,10 +760,12 @@ InsightArea = Literal["deliverability", "reputation", "performance", "security"]
 
 @dataclass
 class InsightFinding:
-    severity: str
-    area: str
-    observation: str
-    recommendation: str
+    # Findings are model-generated JSON the API stores without validating,
+    # so any of these can be missing.
+    severity: Optional[str] = None
+    area: Optional[str] = None
+    observation: Optional[str] = None
+    recommendation: Optional[str] = None
 
 
 @dataclass
@@ -909,8 +927,12 @@ def from_dict(cls: type[_Model], data: Mapping[str, Any]) -> _Model:
 
     Keys the model has no field for are dropped, so a field the API adds
     later does not break older SDK versions. Fields typed as another model,
-    or as a list or dict of models, are built the same way.
+    or as a list or dict of models, are built the same way. A model with a
+    `_normalize` static method gets to reshape the JSON first.
     """
+    normalize = getattr(cls, "_normalize", None)
+    if normalize is not None:
+        data = normalize(data)
     hints = _field_hints(cls)
     kwargs = {
         name: _convert(hint, data[name]) for name, hint in hints.items() if name in data
