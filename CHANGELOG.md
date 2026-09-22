@@ -26,6 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `generate_insights` no longer fails with `KeyError`. The API does not
   return `period_start`, `period_end` or `model` for a new report, so those
   `InsightReport` fields are now optional.
+- `get_domain`, `list_domains` and the other domain methods no longer crash
+  on a domain whose DNS provider has been detected. The API stores the
+  provider inside `dns_records` as a plain string, and the SDK tried to read
+  it as a DNS record (`ValueError`). It is now `Domain.detected_provider`,
+  and `dns_records` holds only `DnsRecord` values. A domain whose stored
+  `dns_records` is an empty list reads as `{}`.
+- `generate_insights` no longer fails when a finding lacks a key. Findings
+  are model-generated and the API stores them without validation, so every
+  `InsightFinding` field is now optional and defaults to `None`.
 
 ### Added
 
@@ -39,6 +48,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Domain.sending_subdomain`, `SignupForm.from_address` and `messages`,
   `BatchResponse.operation_id`, and the scheduling, retry, stream and
   tracking fields on `Email`.
+
+### Changed
+
+- If you build these models yourself, for example in test mocks or with
+  positional arguments, these fields changed:
+  - `InboundEmail`: `from_address` is now `mail_from`, `to_addresses` is
+    now `rcpt_to`, `raw_size` is now `size_bytes`; `subject` is optional;
+    `status` and `updated_at` are new required fields.
+  - `InsightReport`: the required fields are now `id`, `generated_at` and
+    `summary`, in that order; `account_id`, `period_start`, `period_end`
+    and `model` moved after them and are optional.
+  - `InsightFinding`: all fields are optional.
 
 ## [0.5.0] - 2026-09-04
 
