@@ -2,8 +2,23 @@
 
 from __future__ import annotations
 
+import dataclasses
+import functools
+import types
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Generic, Literal, Optional, TypedDict, TypeVar
+from typing import (
+    Any,
+    Generic,
+    Literal,
+    Optional,
+    TypedDict,
+    TypeVar,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 EmailStatus = Literal[
     "queued", "processing", "sent", "delivered", "bounced", "failed", "rejected"
@@ -154,6 +169,16 @@ class Email:
     error_message: Optional[str] = None
     smtp_response: Optional[str] = None
     sent_at: Optional[str] = None
+    scheduled_at: Optional[str] = None
+    next_retry_at: Optional[str] = None
+    delivery_started_at: Optional[str] = None
+    idempotency_key: Optional[str] = None
+    operation_id: Optional[str] = None
+    stream_id: Optional[str] = None
+    sending_ip: Optional[str] = None
+    tracking_override: Optional[bool] = None
+    suppress_list_management_header: bool = False
+    attachments: Optional[Any] = None
 
 
 @dataclass
@@ -193,7 +218,8 @@ class BatchError:
 @dataclass
 class BatchResponse:
     data: list[SendEmailResponse]
-    errors: list[BatchError]
+    errors: list[BatchError] = field(default_factory=list)
+    operation_id: Optional[str] = None
 
 
 @dataclass
@@ -223,7 +249,7 @@ class Domain:
     account_id: str
     domain: str
     dkim_selector: str
-    dkim_public_key: str
+    dkim_public_key: Optional[str]
     spf_verified: bool
     dkim_verified: bool
     dmarc_verified: bool
@@ -238,6 +264,7 @@ class Domain:
     tracking_domain: Optional[str] = None
     tracking_domain_verified: bool = False
     tracking_domain_verified_at: Optional[str] = None
+    sending_subdomain: Optional[str] = None
 
 
 @dataclass
@@ -249,7 +276,7 @@ class VerificationCheck:
 @dataclass
 class DomainVerificationResult:
     domain: Domain
-    checks: dict[str, VerificationCheck]
+    checks: dict[str, VerificationCheck] = field(default_factory=dict)
 
 
 @dataclass
@@ -266,6 +293,9 @@ class Webhook:
     last_success_at: Optional[str] = None
     last_failure_at: Optional[str] = None
     last_failure_reason: Optional[str] = None
+    created_for: Optional[str] = None
+    """What created this webhook: `None` when you added it directly,
+    `"inbound_route"` when it carries an inbound route's URL."""
 
 
 @dataclass
@@ -331,6 +361,13 @@ class ContactList:
     updated_at: str
     contact_count: int = 0
     description: Optional[str] = None
+    welcome_email_enabled: bool = False
+    welcome_email_subject: Optional[str] = None
+    welcome_email_html_body: Optional[str] = None
+    welcome_email_text_body: Optional[str] = None
+    welcome_email_template_id: Optional[str] = None
+    welcome_email_from_address: Optional[str] = None
+    welcome_email_delay_seconds: int = 0
 
 
 @dataclass
@@ -344,6 +381,7 @@ class Contact:
     metadata: Optional[dict[str, str]] = None
     subscribed_at: Optional[str] = None
     unsubscribed_at: Optional[str] = None
+    welcome_email_sent_at: Optional[str] = None
 
 
 @dataclass
@@ -371,6 +409,17 @@ class AnalyticsSummary:
     open_rate_pct: float
     click_rate_pct: float
     bounce_rate_pct: float
+    total_failed: int = 0
+    """Sends given up on after retries. Counted with delivered and bounced in
+    the denominator of `delivery_rate_pct` and `bounce_rate_pct`."""
+    total_unique_opens: int = 0
+    """Emails opened at least once; the open-rate numerator. `total_opens`
+    counts every open event, including re-opens."""
+    total_unique_clicks: int = 0
+    """Emails clicked at least once; the click-rate numerator."""
+    total_proxy_opens: int = 0
+    """Open-pixel fetches by a mail provider's image proxy or scanner. Not part
+    of `total_opens` or the open rate."""
 
 
 @dataclass
@@ -396,9 +445,9 @@ class DomainAnalytics:
 @dataclass
 class AuditLog:
     id: str
-    account_id: str
+    account_id: Optional[str]
     action: str
-    resource_type: str
+    resource_type: Optional[str]
     created_at: str
     resource_id: Optional[str] = None
     actor_id: Optional[str] = None
@@ -431,13 +480,28 @@ class InboundEmail:
     id: str
     account_id: str
     domain_id: str
-    from_address: str
-    to_addresses: list[str]
-    subject: str
-    raw_size: int
+    mail_from: str
+    """Envelope sender (SMTP `MAIL FROM`)."""
+    rcpt_to: list[str]
+    """Envelope recipients (SMTP `RCPT TO`)."""
+    size_bytes: int
+    status: str
     created_at: str
+    updated_at: str
+    route_id: Optional[str] = None
+    message_id: Optional[str] = None
+    from_header: Optional[str] = None
+    to_header: Optional[str] = None
+    cc_header: Optional[str] = None
+    subject: Optional[str] = None
     text_body: Optional[str] = None
     html_body: Optional[str] = None
+    raw_headers: Optional[Any] = None
+    attachments: Optional[Any] = None
+    source_ip: Optional[str] = None
+    spf_result: Optional[str] = None
+    webhook_delivered_at: Optional[str] = None
+    error_message: Optional[str] = None
 
 
 @dataclass
@@ -452,6 +516,8 @@ class InboundRoute:
     created_at: str
     updated_at: str
     webhook_url: Optional[str] = None
+    webhook_id: Optional[str] = None
+    """The webhook that delivers this route's mail, once it has one."""
 
 
 # ---- API Key Types ----
@@ -494,6 +560,7 @@ class Newsletter:
     scheduled_at: Optional[str] = None
     sent_at: Optional[str] = None
     total_recipients: Optional[int] = None
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -627,6 +694,8 @@ class SignupForm:
     description: Optional[str] = None
     success_message: Optional[str] = None
     redirect_url: Optional[str] = None
+    from_address: Optional[str] = None
+    messages: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -664,6 +733,7 @@ class LinkClickStat:
     url: str
     clicks: int
     unique_clicks: int
+    last_clicked_at: Optional[str] = None
 
 
 # ---- Insight Types ----
@@ -683,17 +753,18 @@ class InsightFinding:
 @dataclass
 class InsightReport:
     id: str
-    account_id: Optional[str]
     generated_at: str
-    period_start: str
-    period_end: str
-    model: str
     summary: str
-    findings: list[InsightFinding]
-    raw_markdown: Optional[str] = None
-    acknowledged_at: Optional[str] = None
+    findings: list[InsightFinding] = field(default_factory=list)
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
+    # Not returned by `generate_insights()`; kept for reports read elsewhere.
+    account_id: Optional[str] = None
+    period_start: Optional[str] = None
+    period_end: Optional[str] = None
+    model: Optional[str] = None
+    raw_markdown: Optional[str] = None
+    acknowledged_at: Optional[str] = None
 
 
 # ---- Agent Mailboxes ----
@@ -739,6 +810,14 @@ class MailboxMessage:
     classified_at: Optional[str] = None
     leased_until: Optional[str] = None
     lease_token: Optional[str] = None
+    raw_headers: Optional[Any] = None
+    direction: str = "inbound"
+    """`"inbound"` for mail the mailbox received, `"outbound"` for mail sent
+    from it (a reply or a new message)."""
+    to_addresses: list[str] = field(default_factory=list)
+    """Recipients (To and Cc) of an outbound message; empty for inbound."""
+    email_id: Optional[str] = None
+    """The sent email an outbound message created."""
 
 
 @dataclass
@@ -790,6 +869,8 @@ class MailboxAnalytics:
     total_threads: int
     messages_today: int
     messages_this_week: int
+    sent_messages: int = 0
+    """Messages sent from the mailbox. Not counted in `total_messages`."""
 
 
 @dataclass
@@ -816,3 +897,47 @@ class UpdateSignupFormParams:
         if self.theme is not None:
             d["theme"] = self.theme
         return d
+
+
+# ---- Response parsing ----
+
+_Model = TypeVar("_Model")
+
+
+def from_dict(cls: type[_Model], data: Mapping[str, Any]) -> _Model:
+    """Build a response model from API JSON.
+
+    Keys the model has no field for are dropped, so a field the API adds
+    later does not break older SDK versions. Fields typed as another model,
+    or as a list or dict of models, are built the same way.
+    """
+    hints = _field_hints(cls)
+    kwargs = {
+        name: _convert(hint, data[name]) for name, hint in hints.items() if name in data
+    }
+    return cls(**kwargs)
+
+
+@functools.lru_cache(maxsize=None)
+def _field_hints(cls: type) -> dict[str, Any]:
+    resolved = get_type_hints(cls)
+    return {f.name: resolved[f.name] for f in dataclasses.fields(cls) if f.init}
+
+
+def _convert(hint: Any, value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(hint, type) and dataclasses.is_dataclass(hint):
+        return from_dict(hint, value) if isinstance(value, Mapping) else value
+    origin = get_origin(hint)
+    if origin is list and isinstance(value, list):
+        (item,) = get_args(hint) or (Any,)
+        return [_convert(item, v) for v in value]
+    if origin is dict and isinstance(value, Mapping):
+        _, item = get_args(hint) or (Any, Any)
+        return {k: _convert(item, v) for k, v in value.items()}
+    if origin is Union or origin is types.UnionType:
+        members = [a for a in get_args(hint) if a is not type(None)]
+        if len(members) == 1:
+            return _convert(members[0], value)
+    return value
