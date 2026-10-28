@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-10-28
+
+### Added
+
+- `Domain`: `dns_checked_at`, `dns_drift_detected_at` and `dns_drift_records`, from the API's DNS monitor. When a verified record stops matching, they say which one and since when.
+- `InboundEmail`: the authentication results and sender details the API records (`dkim_result`, `dmarc_result`, `sender_helo`, `sender_hostname`, `sender_hostname_status`, `sender_country`, `sender_country_name`, `sender_service`), plus the spam check (`spam_verdict`, `spam_reasons`).
+
+### Changed
+
+- `Domain.detected_provider` is read only from its own field. The API no longer puts the provider inside `dns_records`, and every stored `dns_records` value is now an object, so the SDK no longer reshapes that field.
+
 ## [0.5.1] - 2026-09-23
 
 ### Fixed
