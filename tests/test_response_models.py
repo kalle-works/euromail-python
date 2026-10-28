@@ -97,14 +97,6 @@ def test_clients_build_response_models_only_through_from_dict():
     assert direct == [], "build these with from_dict(Model, data): " + ", ".join(direct)
 
 
-def test_domain_whose_dns_records_is_a_list_reads_as_no_records():
-    # A domain row can hold `[]` in dns_records instead of an object.
-    sent, _ = _sample(models.Domain)
-    sent["dns_records"] = []
-
-    assert from_dict(models.Domain, sent).dns_records == {}
-
-
 def test_insight_finding_with_missing_keys_still_parses():
     # Findings are model-generated JSON the API stores unvalidated; by the
     # time the SDK sees one, the report is saved and the daily run is spent.

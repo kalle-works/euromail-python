@@ -13,10 +13,16 @@
     "data": {
       "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
       "created_at": "2026-09-22T10:00:00Z",
+      "detected_provider": "detected_provider-example",
       "dkim_public_key": "dkim_public_key-example",
       "dkim_selector": "dkim_selector-example",
       "dkim_verified": true,
       "dmarc_verified": true,
+      "dns_checked_at": "2026-09-22T10:00:00Z",
+      "dns_drift_detected_at": "2026-09-22T10:00:00Z",
+      "dns_drift_records": [
+        "dns_drift_records-example"
+      ],
       "dns_records": {
         "dkim": {
           "type": "TXT",
@@ -38,8 +44,7 @@
           "type": "TXT",
           "host": "_dmarc.example.com",
           "value": "v=DMARC1; p=none"
-        },
-        "detected_provider": "cloudflare"
+        }
       },
       "domain": "domain-example",
       "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
@@ -82,7 +87,6 @@
         "host": "_dmarc.example.com",
         "value": "v=DMARC1; p=none"
       }
-    },
-    "detected_provider": "cloudflare"
+    }
   }
 }

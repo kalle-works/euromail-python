@@ -267,20 +267,13 @@ class Domain:
     sending_subdomain: Optional[str] = None
     detected_provider: Optional[str] = None
     """DNS host detected for the domain (e.g. `"cloudflare"`), if any."""
-
-    @staticmethod
-    def _normalize(data: Mapping[str, Any]) -> dict[str, Any]:
-        # The API keeps the detected DNS provider inside `dns_records` as a
-        # plain string next to the records, and a domain row can hold `[]`
-        # there instead of an object.
-        data = dict(data)
-        raw = data.get("dns_records")
-        records = raw if isinstance(raw, Mapping) else {}
-        provider = records.get("detected_provider")
-        if data.get("detected_provider") is None and isinstance(provider, str):
-            data["detected_provider"] = provider
-        data["dns_records"] = {k: v for k, v in records.items() if isinstance(v, Mapping)}
-        return data
+    dns_checked_at: Optional[str] = None
+    """Last time the DNS monitor checked this verified domain."""
+    dns_drift_detected_at: Optional[str] = None
+    """When a verified record first stopped matching; `None` while they match.
+    Sending is not blocked while this is set."""
+    dns_drift_records: list[str] = field(default_factory=list)
+    """Which records stopped matching: any of `spf`, `dkim`, `return_path`."""
 
 
 @dataclass
@@ -516,6 +509,19 @@ class InboundEmail:
     attachments: Optional[Any] = None
     source_ip: Optional[str] = None
     spf_result: Optional[str] = None
+    dkim_result: Optional[str] = None
+    dmarc_result: Optional[str] = None
+    sender_helo: Optional[str] = None
+    sender_hostname: Optional[str] = None
+    sender_hostname_status: Optional[str] = None
+    sender_country: Optional[str] = None
+    sender_country_name: Optional[str] = None
+    sender_service: Optional[str] = None
+    spam_verdict: Optional[str] = None
+    """`clean`, `suspect`, `spam`, or `unchecked` when no check could run;
+    `None` for messages received before verdicts were recorded."""
+    spam_reasons: Optional[list[str]] = None
+    """The evidence behind the verdict as stable codes, worst first."""
     webhook_delivered_at: Optional[str] = None
     error_message: Optional[str] = None
 
@@ -927,12 +933,8 @@ def from_dict(cls: type[_Model], data: Mapping[str, Any]) -> _Model:
 
     Keys the model has no field for are dropped, so a field the API adds
     later does not break older SDK versions. Fields typed as another model,
-    or as a list or dict of models, are built the same way. A model with a
-    `_normalize` static method gets to reshape the JSON first.
+    or as a list or dict of models, are built the same way.
     """
-    normalize = getattr(cls, "_normalize", None)
-    if normalize is not None:
-        data = normalize(data)
     hints = _field_hints(cls)
     kwargs = {
         name: _convert(hint, data[name]) for name, hint in hints.items() if name in data

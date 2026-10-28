@@ -176,23 +176,14 @@ DNS_RECORDS = {
     "spf": {"type": "TXT", "host": "em.example.com", "value": "v=spf1 include:spf.euromail.dev ~all"},
     "return_path": {"type": "MX", "host": "em.example.com", "value": "bounce.euromail.dev", "priority": 10},
     "dmarc": {"type": "TXT", "host": "_dmarc.example.com", "value": "v=DMARC1; p=none"},
-    # Written by the API's DNS provider detection
-    # (crates/euromail-common/src/dns_verification.rs).
-    "detected_provider": "cloudflare",
 }
 UNTYPED_EXAMPLES: dict[tuple[str, str], Any] = {("Domain", "dns_records"): DNS_RECORDS}
 
-# Model values that differ from the wire on purpose, per schema: the SDK
-# lifts `detected_provider` out of `dns_records`, and a record without a
-# priority reads as `priority=None`.
+# Model values that differ from the wire on purpose, per schema: a record
+# without a priority reads as `priority=None`.
 EXPECT: dict[str, dict[str, Any]] = {
     "Domain": {
-        "dns_records": {
-            k: {"priority": None, **v}
-            for k, v in DNS_RECORDS.items()
-            if k != "detected_provider"
-        },
-        "detected_provider": "cloudflare",
+        "dns_records": {k: {"priority": None, **v} for k, v in DNS_RECORDS.items()},
     },
 }
 
