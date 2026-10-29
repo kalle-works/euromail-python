@@ -1,0 +1,37 @@
+{
+  "call": "list_audit_logs",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/audit-logs"
+  ],
+  "schema": "AuditLog",
+  "response": {
+    "data": [
+      {
+        "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+        "action": "action-example",
+        "actor_id": "actor_id-example",
+        "actor_type": "actor_type-example",
+        "created_at": "2026-09-22T10:00:00Z",
+        "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+        "ip_address": "ip_address-example",
+        "metadata": {
+          "example": "metadata"
+        },
+        "resource_id": "resource_id-example",
+        "resource_type": "resource_type-example"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 25,
+      "total": 1,
+      "total_pages": 1
+    }
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null
+}

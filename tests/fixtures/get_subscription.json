@@ -1,0 +1,33 @@
+{
+  "call": "get_subscription",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/billing/subscription"
+  ],
+  "schema": "Subscription",
+  "response": {
+    "data": {
+      "billing_email": "billing_email-example",
+      "emails_sent_this_month": 3,
+      "first_payment_at": "2026-09-22T10:00:00Z",
+      "limits": {
+        "max_domains": 3,
+        "max_templates": 3,
+        "max_webhooks": 3,
+        "price_cents": 3,
+        "tracking_enabled": true
+      },
+      "monthly_quota": 3,
+      "plan": "plan-example",
+      "plan_monthly_quota": 3,
+      "stripe_subscription_id": "stripe_subscription_id-example",
+      "subscription_status": "subscription_status-example",
+      "trial_ends_at": "2026-09-22T10:00:00Z"
+    }
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null
+}

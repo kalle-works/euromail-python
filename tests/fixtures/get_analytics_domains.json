@@ -1,0 +1,36 @@
+{
+  "call": "get_analytics_domains",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/analytics/domains"
+  ],
+  "schema": "RecipientDomainStats",
+  "response": {
+    "data": [
+      {
+        "bounce_rate": 0.5,
+        "bounced": 3,
+        "click_rate": 0.5,
+        "delivered": 3,
+        "delivery_rate": 0.5,
+        "domain": "domain-example",
+        "open_rate": 0.5,
+        "sent": 3,
+        "unique_clicks": 3,
+        "unique_opens": 3
+      }
+    ],
+    "period": {
+      "from": "2026-08-23",
+      "to": "2026-09-22",
+      "days": 30
+    }
+  },
+  "expect": {},
+  "dropped": {
+    "period": "the range the caller asked for"
+  },
+  "flatten": null
+}

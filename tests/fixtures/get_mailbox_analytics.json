@@ -19,5 +19,7 @@
       "unread_messages": 3
     }
   },
-  "expect": {}
+  "expect": {},
+  "dropped": {},
+  "flatten": null
 }

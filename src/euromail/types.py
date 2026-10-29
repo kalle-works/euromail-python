@@ -179,6 +179,12 @@ class Email:
     tracking_override: Optional[bool] = None
     suppress_list_management_header: bool = False
     attachments: Optional[Any] = None
+    transactional_declared: bool = False
+    """The sender declared the send transactional; only such a send reaches an
+    address that unsubscribed."""
+    events: list[EmailEvent] = field(default_factory=list)
+    """The email's delivery and engagement events. Filled by `get_email`;
+    empty on emails from `list_emails`."""
 
 
 @dataclass
@@ -233,6 +239,8 @@ class Template:
     updated_at: str
     html_body: Optional[str] = None
     text_body: Optional[str] = None
+    preheader: Optional[str] = None
+    """Inbox preview text shown after the subject."""
 
 
 @dataclass
@@ -346,9 +354,10 @@ class SubAccount:
     plan: str
     monthly_quota: int
     emails_sent_this_month: int
-    parent_account_id: str
     is_active: bool
     created_at: str
+    updated_at: str
+    parent_account_id: Optional[str] = None
 
 
 @dataclass
@@ -465,8 +474,15 @@ class DomainAnalytics:
     sent: int
     delivered: int
     bounced: int
-    open_rate: float
-    click_rate: float
+    unique_opens: int
+    """Emails opened at least once."""
+    unique_clicks: int
+    """Emails clicked at least once."""
+    delivery_rate: Optional[float] = None
+    bounce_rate: Optional[float] = None
+    open_rate: Optional[float] = None
+    """`None` when nothing was delivered, as are the other rates."""
+    click_rate: Optional[float] = None
 
 
 @dataclass
@@ -493,13 +509,12 @@ class WebhookTestResponse:
 class DeadLetter:
     stream_id: str
     original_stream: str
-    email_id: str
-    account_id: str
     failure_reason: str
     attempt_count: int
     last_error: str
     failed_at: str
     payload: dict[str, Any]
+    email_id: Optional[str] = None
 
 
 @dataclass
@@ -603,6 +618,19 @@ class Newsletter:
     sent_at: Optional[str] = None
     total_recipients: Optional[int] = None
     tags: list[str] = field(default_factory=list)
+    stats: Optional[NewsletterStats] = None
+    """Delivery stats once the newsletter has been sent. Filled by
+    `get_newsletter`; `None` on drafts and on newsletters from other calls."""
+
+
+@dataclass
+class NewsletterStats:
+    total_recipients: int
+    delivered: int
+    opened: int
+    clicked: int
+    bounced: int
+    unsubscribed: int
 
 
 @dataclass
@@ -674,7 +702,12 @@ class BillingPlan:
     max_sub_accounts: int
     tracking_enabled: bool
     price_cents: int
+    annual_price_cents: int
     stripe_price_id: Optional[str] = None
+    stripe_annual_price_id: Optional[str] = None
+    stripe_overage_price_id: Optional[str] = None
+    """Price billed per email beyond `monthly_quota`; `None` when the plan has
+    no overage billing."""
 
 
 @dataclass
@@ -689,13 +722,18 @@ class SubscriptionLimits:
 @dataclass
 class Subscription:
     plan: str
-    subscription_status: str
-    billing_email: str
     monthly_quota: int
+    """The ceiling a send is held to. Until a non-zero invoice settles it is
+    the free allowance, below `plan_monthly_quota`."""
+    plan_monthly_quota: int
+    """What the plan includes."""
     emails_sent_this_month: int
     limits: SubscriptionLimits
+    subscription_status: Optional[str] = None
+    billing_email: Optional[str] = None
     stripe_subscription_id: Optional[str] = None
     trial_ends_at: Optional[str] = None
+    first_payment_at: Optional[str] = None
 
 
 # ---- GDPR Types ----
@@ -826,6 +864,8 @@ class AgentMailbox:
     auto_responder_enabled: bool = False
     auto_responder_rules: Any = None
     webhook_filters: Optional[Any] = None
+    skip_spam_webhooks: bool = False
+    """Skip webhooks for messages judged spam; they are still stored."""
 
 
 @dataclass
@@ -880,11 +920,23 @@ class MailboxMessage:
     """The evidence behind the verdict as stable codes, worst first."""
 
 
+@dataclass(kw_only=True)
+class ThreadListEntry(MailboxMessage):
+    """One row of the thread list: the newest message in the thread, plus
+    counts over the whole thread."""
+
+    message_count: int
+    unread_count: int
+    sent_count: int
+    first_message_at: str
+    last_message_at: str
+
+
 @dataclass
 class LeasedMessage:
     data: MailboxMessage
-    lease_token: str
-    lease_expires_at: str
+    lease_token: Optional[str] = None
+    lease_expires_at: Optional[str] = None
 
 
 @dataclass

@@ -25,5 +25,7 @@
       "webhook_url": "webhook_url-example"
     }
   },
-  "expect": {}
+  "expect": {},
+  "dropped": {},
+  "flatten": null
 }

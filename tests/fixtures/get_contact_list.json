@@ -1,0 +1,27 @@
+{
+  "call": "get_contact_list",
+  "args": [
+    "c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/contact-lists/c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "schema": "ContactListSummary",
+  "response": {
+    "data": {
+      "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+      "contact_count": 3,
+      "created_at": "2026-09-22T10:00:00Z",
+      "description": "description-example",
+      "double_opt_in": true,
+      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+      "name": "name-example",
+      "updated_at": "2026-09-22T10:00:00Z"
+    }
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null
+}

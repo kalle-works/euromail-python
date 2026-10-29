@@ -5,7 +5,10 @@ generated from the API's OpenAPI document by `tests/fixtures/generate.py`
 (see its docstring to regenerate). For every one, the call must succeed and
 every field the API sends must be readable on the returned model with the
 value the API sent, or with the value in the fixture's `expect` where the SDK
-reshapes it on purpose.
+reshapes it on purpose (a member named by `flatten` is read as fields of
+the model itself). The same holds for what the envelope carries beside
+`data`, except `pagination` (read into `PaginatedResponse`) and the keys the
+fixture lists under `dropped`.
 """
 
 from __future__ import annotations
@@ -37,10 +40,18 @@ def test_call_exposes_every_field_the_api_sends(fixture):
     with EuroMail(api_key="test", base_url=BASE_URL) as client:
         result = getattr(client, spec["call"])(*spec["args"], **spec["kwargs"])
 
+    envelope = set(body) - {"data"} - set(spec["dropped"])
     if isinstance(result, PaginatedResponse):
+        envelope.discard("pagination")
         result = result.data
+    if envelope:
+        assert not isinstance(result, list), f"a list cannot carry {sorted(envelope)}"
+        readable = dataclasses.asdict(result)
+        assert {k: readable.get(k) for k in envelope} == {k: body[k] for k in envelope}
     returned = result if isinstance(result, list) else [result]
     sent = body["data"] if isinstance(body["data"], list) else [body["data"]]
+    if spec["flatten"]:
+        sent = [{**obj.pop(spec["flatten"]), **obj} for obj in map(dict, sent)]
     assert len(returned) == len(sent)
     for model, obj in zip(returned, sent):
         readable = dataclasses.asdict(model)

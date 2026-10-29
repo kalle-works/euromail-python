@@ -43,5 +43,7 @@
       "unsubscribed": 3
     }
   },
-  "expect": {}
+  "expect": {},
+  "dropped": {},
+  "flatten": null
 }

@@ -1,0 +1,37 @@
+{
+  "call": "list_inbound_routes",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/inbound-routes"
+  ],
+  "schema": "InboundRoute",
+  "response": {
+    "data": [
+      {
+        "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+        "created_at": "2026-09-22T10:00:00Z",
+        "domain_id": "9bd740f6-1eec-5db5-ae51-a0ba00848428",
+        "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+        "is_active": true,
+        "match_type": "match_type-example",
+        "pattern": "pattern-example",
+        "priority": 3,
+        "skip_spam_webhooks": true,
+        "updated_at": "2026-09-22T10:00:00Z",
+        "webhook_id": "37bbbfc3-0101-5cc8-a8cf-af77e7ab38cd",
+        "webhook_url": "webhook_url-example"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 25,
+      "total": 1,
+      "total_pages": 1
+    }
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null
+}

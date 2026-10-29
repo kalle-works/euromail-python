@@ -54,6 +54,7 @@ from euromail.types import (
     InsightReport,
     AgentMailbox,
     MailboxMessage,
+    ThreadListEntry,
     LeasedMessage,
     MailboxReplyResult,
     MailboxAttachmentUrl,
@@ -175,9 +176,8 @@ class AsyncEuroMail:
 
     async def get_email(self, email_id: str) -> Email:
         data = await self._get(f"/v1/emails/{email_id}")
-        inner = data.get("data", data)
-        email_data = inner.get("email", inner)
-        return from_dict(Email, email_data)
+        inner = data["data"]
+        return from_dict(Email, {**inner["email"], "events": inner["events"]})
 
     async def list_emails(
         self,
@@ -840,7 +840,7 @@ class AsyncEuroMail:
 
     async def get_newsletter(self, newsletter_id: str) -> Newsletter:
         data = await self._get(f"/v1/newsletters/{newsletter_id}")
-        return from_dict(Newsletter, data["data"])
+        return from_dict(Newsletter, {**data["data"], "stats": data.get("stats")})
 
     async def update_newsletter(
         self, newsletter_id: str, **kwargs: Any
@@ -1065,7 +1065,7 @@ class AsyncEuroMail:
         *,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> list[MailboxMessage]:
+    ) -> list[ThreadListEntry]:
         params: dict[str, Any] = {}
         if limit is not None:
             params["limit"] = limit
@@ -1075,7 +1075,7 @@ class AsyncEuroMail:
             f"/v1/agent-mailboxes/{mailbox_id}/threads",
             params=params or None,
         )
-        return [from_dict(MailboxMessage, m) for m in data["data"]]
+        return [from_dict(ThreadListEntry, m) for m in data["data"]]
 
     async def get_mailbox_thread(
         self,

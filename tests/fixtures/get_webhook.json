@@ -27,5 +27,7 @@
       "url": "url-example"
     }
   },
-  "expect": {}
+  "expect": {},
+  "dropped": {},
+  "flatten": null
 }

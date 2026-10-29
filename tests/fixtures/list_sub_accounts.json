@@ -1,0 +1,35 @@
+{
+  "call": "list_sub_accounts",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/accounts"
+  ],
+  "schema": "SubAccount",
+  "response": {
+    "data": [
+      {
+        "created_at": "2026-09-22T10:00:00Z",
+        "email": "email-example",
+        "emails_sent_this_month": 3,
+        "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+        "is_active": true,
+        "monthly_quota": 3,
+        "name": "name-example",
+        "parent_account_id": "2510234e-e96d-5c0b-a0d6-cb0e3c4e6a44",
+        "plan": "plan-example",
+        "updated_at": "2026-09-22T10:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 25,
+      "total": 1,
+      "total_pages": 1
+    }
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null
+}

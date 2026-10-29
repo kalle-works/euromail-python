@@ -36,5 +36,9 @@
       "days": 30
     }
   },
-  "expect": {}
+  "expect": {},
+  "dropped": {
+    "period": "the range the caller asked for"
+  },
+  "flatten": null
 }

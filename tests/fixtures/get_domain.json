@@ -88,5 +88,7 @@
         "value": "v=DMARC1; p=none"
       }
     }
-  }
+  },
+  "dropped": {},
+  "flatten": null
 }
