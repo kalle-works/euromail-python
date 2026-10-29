@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Fields the API sends as `null` are now typed `Optional`: the four `AnalyticsSummary` rates and the `DomainAnalytics` rates (an unknown rate is not the same as 0%), `DeadLetter.email_id`, `SubAccount.parent_account_id`, `Subscription.subscription_status` and `billing_email`, `LeasedMessage.lease_token` and `lease_expires_at`.
+- Fields the API sends as `null` are now typed `Optional`: the four `AnalyticsSummary` rates and the `DomainAnalytics` rates (an unknown rate is not the same as 0%), `DeadLetter.email_id`, `SubAccount.parent_account_id`, and `Subscription.subscription_status` and `billing_email`.
+- Response models take keyword arguments only. Code that builds one positionally, such as a test fake, must name the fields. This release reorders fields and makes some new ones required, so without this change a positional call could build without error and put values in the wrong fields. Request types (`SendEmailParams`, `Attachment`, the signup-form params) are unchanged.
 
 ## [0.6.0] - 2026-10-28
 
