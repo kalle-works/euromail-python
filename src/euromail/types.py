@@ -414,10 +414,19 @@ class AnalyticsSummary:
     total_opens: int
     total_clicks: int
     total_unsubscribes: int
-    delivery_rate_pct: float
-    open_rate_pct: float
-    click_rate_pct: float
-    bounce_rate_pct: float
+    delivery_rate_pct: Optional[float] = None
+    """Delivered share of the sends that reached an outcome (delivered, bounced
+    or failed). `None` when no send reached an outcome: the rate is unknown."""
+    open_rate_pct: Optional[float] = None
+    """Unique opens per delivered send; `None` when nothing was delivered."""
+    click_rate_pct: Optional[float] = None
+    """Unique clicks per delivered send; `None` when nothing was delivered."""
+    bounce_rate_pct: Optional[float] = None
+    """Bounced share of the same denominator as `delivery_rate_pct`."""
+    complaint_rate_pct: Optional[float] = None
+    """Complaints per delivered send; `None` when nothing was delivered."""
+    unsubscribe_rate_pct: Optional[float] = None
+    """Unsubscribes per delivered send; `None` when nothing was delivered."""
     total_failed: int = 0
     """Sends given up on after retries. Counted with delivered and bounced in
     the denominator of `delivery_rate_pct` and `bounce_rate_pct`."""
@@ -429,6 +438,15 @@ class AnalyticsSummary:
     total_proxy_opens: int = 0
     """Open-pixel fetches by a mail provider's image proxy or scanner. Not part
     of `total_opens` or the open rate."""
+    total_hard_bounces: int = 0
+    """Bounces the receiving server called permanent; part of `total_bounced`."""
+    total_soft_bounces: int = 0
+    """Bounces the receiving server called temporary; part of `total_bounced`."""
+    total_complaints: int = 0
+    """Spam complaints, one per complaining recipient."""
+    total_rejected: int = 0
+    """Sends stopped before any delivery attempt. Not in any rate's
+    denominator: nothing was handed to a receiving server."""
 
 
 @dataclass
@@ -540,6 +558,8 @@ class InboundRoute:
     webhook_url: Optional[str] = None
     webhook_id: Optional[str] = None
     """The webhook that delivers this route's mail, once it has one."""
+    skip_spam_webhooks: bool = False
+    """Skip webhooks for messages judged spam; they are still stored."""
 
 
 # ---- API Key Types ----
@@ -842,6 +862,22 @@ class MailboxMessage:
     """Recipients (To and Cc) of an outbound message; empty for inbound."""
     email_id: Optional[str] = None
     """The sent email an outbound message created."""
+    spf_result: Optional[str] = None
+    """Sender checks for a received message, as on `InboundEmail`; `None` on
+    outbound rows and on messages received before they were recorded."""
+    dkim_result: Optional[str] = None
+    dmarc_result: Optional[str] = None
+    sender_helo: Optional[str] = None
+    sender_hostname: Optional[str] = None
+    sender_hostname_status: Optional[str] = None
+    sender_country: Optional[str] = None
+    sender_country_name: Optional[str] = None
+    sender_service: Optional[str] = None
+    spam_verdict: Optional[str] = None
+    """`clean`, `suspect`, `spam`, or `unchecked`, as on `InboundEmail`; `None`
+    on outbound rows and on messages received before verdicts were recorded."""
+    spam_reasons: Optional[list[str]] = None
+    """The evidence behind the verdict as stable codes, worst first."""
 
 
 @dataclass

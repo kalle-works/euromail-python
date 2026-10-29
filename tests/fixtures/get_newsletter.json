@@ -11,28 +11,36 @@
   "schema": "Newsletter",
   "response": {
     "data": {
-      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
       "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
-      "list_id": "90ba1041-27e2-515a-9382-ef329c358ea1",
-      "subject": "subject-example",
+      "created_at": "2026-09-22T10:00:00Z",
       "from_address": "from_address-example",
       "html_body": "html_body-example",
-      "text_body": "text_body-example",
-      "template_id": "ae9a7f7c-fec0-5de9-b03b-d4333f90e982",
-      "template_data": {
-        "example": "template_data"
-      },
+      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+      "list_id": "90ba1041-27e2-515a-9382-ef329c358ea1",
+      "operation_id": "0017b632-68c4-5df6-877b-6e9944b839dc",
       "reply_to": "reply_to-example",
+      "scheduled_at": "2026-09-22T10:00:00Z",
+      "sent_at": "2026-09-22T10:00:00Z",
+      "status": "status-example",
+      "subject": "subject-example",
       "tags": [
         "tags-example"
       ],
-      "status": "status-example",
-      "operation_id": "0017b632-68c4-5df6-877b-6e9944b839dc",
-      "scheduled_at": "2026-09-22T10:00:00Z",
-      "sent_at": "2026-09-22T10:00:00Z",
+      "template_data": {
+        "example": "template_data"
+      },
+      "template_id": "ae9a7f7c-fec0-5de9-b03b-d4333f90e982",
+      "text_body": "text_body-example",
       "total_recipients": 3,
-      "created_at": "2026-09-22T10:00:00Z",
       "updated_at": "2026-09-22T10:00:00Z"
+    },
+    "stats": {
+      "bounced": 3,
+      "clicked": 3,
+      "delivered": 3,
+      "opened": 3,
+      "total_recipients": 3,
+      "unsubscribed": 3
     }
   },
   "expect": {}

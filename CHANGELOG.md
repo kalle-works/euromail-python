@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-10-29
+
+### Added
+
+- `AnalyticsSummary`: `total_hard_bounces`, `total_soft_bounces`, `total_complaints`, `total_rejected`, `complaint_rate_pct` and `unsubscribe_rate_pct`.
+- `InboundRoute.skip_spam_webhooks`: whether the route holds back webhooks for mail judged to be spam.
+- `MailboxMessage`: the same sender checks and spam verdict that `InboundEmail` has (`spf_result`, `dkim_result`, `dmarc_result`, `sender_helo`, `sender_hostname`, `sender_hostname_status`, `sender_country`, `sender_country_name`, `sender_service`, `spam_verdict`, `spam_reasons`).
+
+### Changed
+
+- `AnalyticsSummary.delivery_rate_pct`, `open_rate_pct`, `click_rate_pct` and `bounce_rate_pct` are now typed `Optional[float]`. The API sends `null` when there is nothing to divide by. With the old `float` type you couldn't tell that an unknown rate is not the same as 0%.
+
 ## [0.6.0] - 2026-10-28
 
 ### Added

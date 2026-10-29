@@ -11,12 +11,12 @@
   "schema": "MailboxAnalytics",
   "response": {
     "data": {
-      "total_messages": 3,
-      "unread_messages": 3,
-      "total_threads": 3,
-      "messages_today": 3,
       "messages_this_week": 3,
-      "sent_messages": 3
+      "messages_today": 3,
+      "sent_messages": 3,
+      "total_messages": 3,
+      "total_threads": 3,
+      "unread_messages": 3
     }
   },
   "expect": {}
