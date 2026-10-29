@@ -10,12 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `AnalyticsSummary`: `total_hard_bounces`, `total_soft_bounces`, `total_complaints`, `total_rejected`, `complaint_rate_pct` and `unsubscribe_rate_pct`.
-- `InboundRoute.skip_spam_webhooks`: whether the route holds back webhooks for mail judged to be spam.
-- `MailboxMessage`: the same sender checks and spam verdict that `InboundEmail` has (`spf_result`, `dkim_result`, `dmarc_result`, `sender_helo`, `sender_hostname`, `sender_hostname_status`, `sender_country`, `sender_country_name`, `sender_service`, `spam_verdict`, `spam_reasons`).
+- `DomainAnalytics`: `unique_opens`, `unique_clicks`, `delivery_rate` and `bounce_rate`.
+- `Email.events`: `get_email` now returns the email's events along with it. The API always sent them, but the SDK threw them away. `Email.transactional_declared` is added as well.
+- `Newsletter.stats` (`NewsletterStats`): delivery stats for a sent newsletter, filled in by `get_newsletter`.
+- `list_mailbox_threads` returns `ThreadListEntry`, which is a `MailboxMessage` plus the thread's `message_count`, `unread_count`, `sent_count`, `first_message_at` and `last_message_at`.
+- `MailboxMessage`: the sender checks and spam verdict that `InboundEmail` already has (`spf_result`, `dkim_result`, `dmarc_result`, `sender_helo`, `sender_hostname`, `sender_hostname_status`, `sender_country`, `sender_country_name`, `sender_service`, `spam_verdict`, `spam_reasons`).
+- `InboundRoute.skip_spam_webhooks` and `AgentMailbox.skip_spam_webhooks`.
+- `Template.preheader`, `SubAccount.updated_at`, `Subscription.plan_monthly_quota` and `first_payment_at`, `BillingPlan.annual_price_cents`, `stripe_annual_price_id` and `stripe_overage_price_id`.
+
+### Fixed
+
+- `list_dead_letters` raised `TypeError` on every call because `DeadLetter` required an `account_id` that the API does not send. The field has been removed.
+- On `AsyncEuroMail`, `get_analytics_timeseries`, `get_analytics_domains` and `list_dead_letters` raised on every call. They iterated over the response envelope instead of its `data`.
 
 ### Changed
 
-- `AnalyticsSummary.delivery_rate_pct`, `open_rate_pct`, `click_rate_pct` and `bounce_rate_pct` are now typed `Optional[float]`. The API sends `null` when there is nothing to divide by. With the old `float` type you couldn't tell that an unknown rate is not the same as 0%.
+- Fields the API sends as `null` are now typed `Optional`: the four `AnalyticsSummary` rates and the `DomainAnalytics` rates (an unknown rate is not the same as 0%), `DeadLetter.email_id`, `SubAccount.parent_account_id`, `Subscription.subscription_status` and `billing_email`, `LeasedMessage.lease_token` and `lease_expires_at`.
 
 ## [0.6.0] - 2026-10-28
 
