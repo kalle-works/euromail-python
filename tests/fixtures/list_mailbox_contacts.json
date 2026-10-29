@@ -1,0 +1,26 @@
+{
+  "call": "list_mailbox_contacts",
+  "args": [
+    "c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/agent-mailboxes/c8e8c5a3-8050-506c-a5fb-de56aceb0032/contacts"
+  ],
+  "schema": "MailboxContact",
+  "response": {
+    "data": [
+      {
+        "display_name": "display_name-example",
+        "email": "email-example",
+        "last_seen": "2026-09-22T10:00:00Z",
+        "message_count": 3
+      }
+    ]
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null,
+  "whole_body": false
+}

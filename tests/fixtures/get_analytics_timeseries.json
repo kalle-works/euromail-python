@@ -1,0 +1,33 @@
+{
+  "call": "get_analytics_timeseries",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/analytics/timeseries"
+  ],
+  "schema": "TimeseriesPoint",
+  "response": {
+    "data": [
+      {
+        "bounced": 3,
+        "clicks": 3,
+        "date": "2026-09-22",
+        "delivered": 3,
+        "opens": 3,
+        "sent": 3
+      }
+    ],
+    "period": {
+      "from": "2026-08-23",
+      "to": "2026-09-22",
+      "days": 30
+    }
+  },
+  "expect": {},
+  "dropped": {
+    "period": "the range the caller asked for"
+  },
+  "flatten": null,
+  "whole_body": false
+}

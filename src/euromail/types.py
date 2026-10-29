@@ -142,7 +142,7 @@ class SendEmailParams:
         return d
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Email:
     id: str
     account_id: str
@@ -179,9 +179,15 @@ class Email:
     tracking_override: Optional[bool] = None
     suppress_list_management_header: bool = False
     attachments: Optional[Any] = None
+    transactional_declared: bool = False
+    """The sender declared the send transactional; only such a send reaches an
+    address that unsubscribed."""
+    events: list[EmailEvent] = field(default_factory=list)
+    """The email's delivery and engagement events. Filled by `get_email`;
+    empty on emails from `list_emails`."""
 
 
-@dataclass
+@dataclass(kw_only=True)
 class EmailEvent:
     id: str
     email_id: str
@@ -198,7 +204,7 @@ class EmailEvent:
     raw_payload: Optional[dict[str, Any]] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SendEmailResponse:
     id: str
     message_id: str
@@ -209,20 +215,20 @@ class SendEmailResponse:
     scheduled_at: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BatchError:
     index: int
     error: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BatchResponse:
     data: list[SendEmailResponse]
     errors: list[BatchError] = field(default_factory=list)
     operation_id: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Template:
     id: str
     account_id: str
@@ -233,9 +239,11 @@ class Template:
     updated_at: str
     html_body: Optional[str] = None
     text_body: Optional[str] = None
+    preheader: Optional[str] = None
+    """Inbox preview text shown after the subject."""
 
 
-@dataclass
+@dataclass(kw_only=True)
 class DnsRecord:
     type: str
     host: str
@@ -243,7 +251,7 @@ class DnsRecord:
     priority: Optional[int] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Domain:
     id: str
     account_id: str
@@ -276,19 +284,19 @@ class Domain:
     """Which records stopped matching: any of `spf`, `dkim`, `return_path`."""
 
 
-@dataclass
+@dataclass(kw_only=True)
 class VerificationCheck:
     verified: bool
     detail: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class DomainVerificationResult:
     domain: Domain
     checks: dict[str, VerificationCheck] = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Webhook:
     id: str
     account_id: str
@@ -307,7 +315,7 @@ class Webhook:
     `"inbound_route"` when it carries an inbound route's URL."""
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Suppression:
     id: str
     account_id: str
@@ -317,7 +325,7 @@ class Suppression:
     source_email_id: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ImportSuppressionsResult:
     """Result of a bulk suppression import (`POST /v1/suppressions/import`)."""
 
@@ -326,7 +334,7 @@ class ImportSuppressionsResult:
     invalid_addresses: list[str]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Account:
     id: str
     name: str
@@ -338,7 +346,7 @@ class Account:
     created_at: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SubAccount:
     id: str
     name: str
@@ -346,12 +354,13 @@ class SubAccount:
     plan: str
     monthly_quota: int
     emails_sent_this_month: int
-    parent_account_id: str
     is_active: bool
     created_at: str
+    updated_at: str
+    parent_account_id: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class PaginatedResponse(Generic[T]):
     data: list[T]
     page: int
@@ -360,7 +369,7 @@ class PaginatedResponse(Generic[T]):
     total_pages: int
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ContactList:
     id: str
     account_id: str
@@ -379,7 +388,7 @@ class ContactList:
     welcome_email_delay_seconds: int = 0
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Contact:
     id: str
     list_id: str
@@ -393,20 +402,20 @@ class Contact:
     welcome_email_sent_at: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BulkAddContactsResponse:
     inserted: int
     total_requested: int
 
 
-@dataclass
+@dataclass(kw_only=True)
 class AnalyticsPeriod:
     from_date: str
     to_date: str
     period: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class AnalyticsSummary:
     total_sent: int
     total_delivered: int
@@ -414,10 +423,19 @@ class AnalyticsSummary:
     total_opens: int
     total_clicks: int
     total_unsubscribes: int
-    delivery_rate_pct: float
-    open_rate_pct: float
-    click_rate_pct: float
-    bounce_rate_pct: float
+    delivery_rate_pct: Optional[float] = None
+    """Delivered share of the sends that reached an outcome (delivered, bounced
+    or failed). `None` when no send reached an outcome: the rate is unknown."""
+    open_rate_pct: Optional[float] = None
+    """Unique opens per delivered send; `None` when nothing was delivered."""
+    click_rate_pct: Optional[float] = None
+    """Unique clicks per delivered send; `None` when nothing was delivered."""
+    bounce_rate_pct: Optional[float] = None
+    """Bounced share of the same denominator as `delivery_rate_pct`."""
+    complaint_rate_pct: Optional[float] = None
+    """Complaints per delivered send; `None` when nothing was delivered."""
+    unsubscribe_rate_pct: Optional[float] = None
+    """Unsubscribes per delivered send; `None` when nothing was delivered."""
     total_failed: int = 0
     """Sends given up on after retries. Counted with delivered and bounced in
     the denominator of `delivery_rate_pct` and `bounce_rate_pct`."""
@@ -429,9 +447,18 @@ class AnalyticsSummary:
     total_proxy_opens: int = 0
     """Open-pixel fetches by a mail provider's image proxy or scanner. Not part
     of `total_opens` or the open rate."""
+    total_hard_bounces: int = 0
+    """Bounces the receiving server called permanent; part of `total_bounced`."""
+    total_soft_bounces: int = 0
+    """Bounces the receiving server called temporary; part of `total_bounced`."""
+    total_complaints: int = 0
+    """Spam complaints, one per complaining recipient."""
+    total_rejected: int = 0
+    """Sends stopped before any delivery attempt. Not in any rate's
+    denominator: nothing was handed to a receiving server."""
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TimeseriesPoint:
     date: str
     sent: Optional[int] = None
@@ -441,17 +468,24 @@ class TimeseriesPoint:
     clicks: Optional[int] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class DomainAnalytics:
     domain: str
     sent: int
     delivered: int
     bounced: int
-    open_rate: float
-    click_rate: float
+    unique_opens: int
+    """Emails opened at least once."""
+    unique_clicks: int
+    """Emails clicked at least once."""
+    delivery_rate: Optional[float] = None
+    bounce_rate: Optional[float] = None
+    open_rate: Optional[float] = None
+    """`None` when nothing was delivered, as are the other rates."""
+    click_rate: Optional[float] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class AuditLog:
     id: str
     account_id: Optional[str]
@@ -465,26 +499,25 @@ class AuditLog:
     metadata: Optional[dict[str, Any]] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class WebhookTestResponse:
     message: str
     payload: dict[str, Any]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class DeadLetter:
     stream_id: str
     original_stream: str
-    email_id: str
-    account_id: str
     failure_reason: str
     attempt_count: int
     last_error: str
     failed_at: str
     payload: dict[str, Any]
+    email_id: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class InboundEmail:
     id: str
     account_id: str
@@ -526,7 +559,7 @@ class InboundEmail:
     error_message: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class InboundRoute:
     id: str
     account_id: str
@@ -540,11 +573,13 @@ class InboundRoute:
     webhook_url: Optional[str] = None
     webhook_id: Optional[str] = None
     """The webhook that delivers this route's mail, once it has one."""
+    skip_spam_webhooks: bool = False
+    """Skip webhooks for messages judged spam; they are still stored."""
 
 
 # ---- API Key Types ----
 
-@dataclass
+@dataclass(kw_only=True)
 class ApiKey:
     id: str
     name: str
@@ -555,7 +590,7 @@ class ApiKey:
     last_used_at: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ApiKeyCreated(ApiKey):
     """Returned only at creation time. Store `key` securely."""
     key: str = ""
@@ -563,7 +598,7 @@ class ApiKeyCreated(ApiKey):
 
 # ---- Newsletter Types ----
 
-@dataclass
+@dataclass(kw_only=True)
 class Newsletter:
     id: str
     account_id: str
@@ -583,9 +618,22 @@ class Newsletter:
     sent_at: Optional[str] = None
     total_recipients: Optional[int] = None
     tags: list[str] = field(default_factory=list)
+    stats: Optional[NewsletterStats] = None
+    """Delivery stats once the newsletter has been sent. Filled by
+    `get_newsletter`; `None` on drafts and on newsletters from other calls."""
 
 
-@dataclass
+@dataclass(kw_only=True)
+class NewsletterStats:
+    total_recipients: int
+    delivered: int
+    opened: int
+    clicked: int
+    bounced: int
+    unsubscribed: int
+
+
+@dataclass(kw_only=True)
 class NewsletterSendResponse:
     operation_id: str
     total_recipients: int
@@ -594,7 +642,7 @@ class NewsletterSendResponse:
 
 # ---- Broadcast Types ----
 
-@dataclass
+@dataclass(kw_only=True)
 class BroadcastResponse:
     operation_id: str
     total_recipients: int
@@ -606,7 +654,7 @@ class BroadcastResponse:
 Deliverable = Literal["yes", "no", "unknown"]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class EmailValidation:
     email: str
     valid: bool
@@ -624,7 +672,7 @@ OperationType = Literal["broadcast", "newsletter_send", "bulk_import"]
 OperationStatus = Literal["pending", "processing", "completed", "failed"]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Operation:
     id: str
     account_id: str
@@ -643,7 +691,7 @@ class Operation:
 
 # ---- Billing Types ----
 
-@dataclass
+@dataclass(kw_only=True)
 class BillingPlan:
     plan: str
     monthly_quota: int
@@ -654,10 +702,15 @@ class BillingPlan:
     max_sub_accounts: int
     tracking_enabled: bool
     price_cents: int
+    annual_price_cents: int
     stripe_price_id: Optional[str] = None
+    stripe_annual_price_id: Optional[str] = None
+    stripe_overage_price_id: Optional[str] = None
+    """Price billed per email beyond `monthly_quota`; `None` when the plan has
+    no overage billing."""
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SubscriptionLimits:
     max_domains: int
     max_templates: int
@@ -666,21 +719,26 @@ class SubscriptionLimits:
     price_cents: int
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Subscription:
     plan: str
-    subscription_status: str
-    billing_email: str
     monthly_quota: int
+    """The ceiling a send is held to. Until a non-zero invoice settles it is
+    the free allowance, below `plan_monthly_quota`."""
+    plan_monthly_quota: int
+    """What the plan includes."""
     emails_sent_this_month: int
     limits: SubscriptionLimits
+    subscription_status: Optional[str] = None
+    billing_email: Optional[str] = None
     stripe_subscription_id: Optional[str] = None
     trial_ends_at: Optional[str] = None
+    first_payment_at: Optional[str] = None
 
 
 # ---- GDPR Types ----
 
-@dataclass
+@dataclass(kw_only=True)
 class GdprExport:
     email_address: str
     emails: list[dict[str, Any]]
@@ -690,7 +748,7 @@ class GdprExport:
     inbound_emails: list[dict[str, Any]]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class GdprEraseResult:
     email_address: str
     rows_deleted: int
@@ -699,7 +757,7 @@ class GdprEraseResult:
 
 # ---- Signup Form Types ----
 
-@dataclass
+@dataclass(kw_only=True)
 class SignupForm:
     id: str
     account_id: str
@@ -750,7 +808,7 @@ class CreateSignupFormParams:
 
 # ---- Link Click Stats ----
 
-@dataclass
+@dataclass(kw_only=True)
 class LinkClickStat:
     url: str
     clicks: int
@@ -764,7 +822,7 @@ InsightSeverity = Literal["info", "warn", "critical"]
 InsightArea = Literal["deliverability", "reputation", "performance", "security"]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class InsightFinding:
     # Findings are model-generated JSON the API stores without validating,
     # so any of these can be missing.
@@ -774,7 +832,7 @@ class InsightFinding:
     recommendation: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class InsightReport:
     id: str
     generated_at: str
@@ -794,7 +852,7 @@ class InsightReport:
 # ---- Agent Mailboxes ----
 
 
-@dataclass
+@dataclass(kw_only=True)
 class AgentMailbox:
     id: str
     account_id: str
@@ -806,9 +864,11 @@ class AgentMailbox:
     auto_responder_enabled: bool = False
     auto_responder_rules: Any = None
     webhook_filters: Optional[Any] = None
+    skip_spam_webhooks: bool = False
+    """Skip webhooks for messages judged spam; they are still stored."""
 
 
-@dataclass
+@dataclass(kw_only=True)
 class MailboxMessage:
     id: str
     mailbox_id: str
@@ -842,16 +902,44 @@ class MailboxMessage:
     """Recipients (To and Cc) of an outbound message; empty for inbound."""
     email_id: Optional[str] = None
     """The sent email an outbound message created."""
+    spf_result: Optional[str] = None
+    """Sender checks for a received message, as on `InboundEmail`; `None` on
+    outbound rows and on messages received before they were recorded."""
+    dkim_result: Optional[str] = None
+    dmarc_result: Optional[str] = None
+    sender_helo: Optional[str] = None
+    sender_hostname: Optional[str] = None
+    sender_hostname_status: Optional[str] = None
+    sender_country: Optional[str] = None
+    sender_country_name: Optional[str] = None
+    sender_service: Optional[str] = None
+    spam_verdict: Optional[str] = None
+    """`clean`, `suspect`, `spam`, or `unchecked`, as on `InboundEmail`; `None`
+    on outbound rows and on messages received before verdicts were recorded."""
+    spam_reasons: Optional[list[str]] = None
+    """The evidence behind the verdict as stable codes, worst first."""
 
 
-@dataclass
+@dataclass(kw_only=True)
+class ThreadListEntry(MailboxMessage):
+    """One row of the thread list: the newest message in the thread, plus
+    counts over the whole thread."""
+
+    message_count: int
+    unread_count: int
+    sent_count: int
+    first_message_at: str
+    last_message_at: str
+
+
+@dataclass(kw_only=True)
 class LeasedMessage:
     data: MailboxMessage
     lease_token: str
     lease_expires_at: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class MailboxReplyResult:
     id: str
     status: str
@@ -878,7 +966,7 @@ class MailboxAttachmentUrl(TypedDict, total=False):
     expires_in_seconds: int
 
 
-@dataclass
+@dataclass(kw_only=True)
 class MailboxContact:
     email: str
     message_count: int
@@ -886,7 +974,7 @@ class MailboxContact:
     display_name: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class MailboxAnalytics:
     total_messages: int
     unread_messages: int

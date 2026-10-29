@@ -1,0 +1,47 @@
+{
+  "call": "get_sub_account_analytics",
+  "args": [
+    "c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/accounts/c8e8c5a3-8050-506c-a5fb-de56aceb0032/analytics"
+  ],
+  "schema": "AnalyticsSummary",
+  "response": {
+    "data": {
+      "bounce_rate_pct": 0.5,
+      "click_rate_pct": 0.5,
+      "complaint_rate_pct": 0.5,
+      "delivery_rate_pct": 0.5,
+      "open_rate_pct": 0.5,
+      "total_bounced": 3,
+      "total_clicks": 3,
+      "total_complaints": 3,
+      "total_delivered": 3,
+      "total_failed": 3,
+      "total_hard_bounces": 3,
+      "total_opens": 3,
+      "total_proxy_opens": 3,
+      "total_rejected": 3,
+      "total_sent": 3,
+      "total_soft_bounces": 3,
+      "total_unique_clicks": 3,
+      "total_unique_opens": 3,
+      "total_unsubscribes": 3,
+      "unsubscribe_rate_pct": 0.5
+    },
+    "period": {
+      "from": "2026-08-23",
+      "to": "2026-09-22",
+      "days": 30
+    }
+  },
+  "expect": {},
+  "dropped": {
+    "period": "the range the caller asked for"
+  },
+  "flatten": null,
+  "whole_body": false
+}

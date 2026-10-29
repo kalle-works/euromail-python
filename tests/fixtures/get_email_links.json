@@ -19,5 +19,8 @@
       }
     ]
   },
-  "expect": {}
+  "expect": {},
+  "dropped": {},
+  "flatten": null,
+  "whole_body": false
 }

@@ -1,0 +1,33 @@
+{
+  "call": "list_dead_letters",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/dead-letters"
+  ],
+  "schema": "DeadLetter",
+  "response": {
+    "data": [
+      {
+        "attempt_count": 3,
+        "email_id": "26fc76ed-f23e-54d0-b646-7420d7c3ce99",
+        "failed_at": "2026-09-22T10:00:00Z",
+        "failure_reason": "failure_reason-example",
+        "last_error": "last_error-example",
+        "original_stream": "original_stream-example",
+        "payload": {
+          "example": "payload"
+        },
+        "stream_id": "stream_id-example"
+      }
+    ],
+    "total": 3
+  },
+  "expect": {},
+  "dropped": {
+    "total": "returns a plain list"
+  },
+  "flatten": null,
+  "whole_body": false
+}

@@ -54,6 +54,7 @@ from euromail.types import (
     InsightReport,
     AgentMailbox,
     MailboxMessage,
+    ThreadListEntry,
     LeasedMessage,
     MailboxReplyResult,
     MailboxAttachmentUrl,
@@ -175,9 +176,8 @@ class AsyncEuroMail:
 
     async def get_email(self, email_id: str) -> Email:
         data = await self._get(f"/v1/emails/{email_id}")
-        inner = data.get("data", data)
-        email_data = inner.get("email", inner)
-        return from_dict(Email, email_data)
+        inner = data["data"]
+        return from_dict(Email, {**inner["email"], "events": inner["events"]})
 
     async def list_emails(
         self,
@@ -557,7 +557,7 @@ class AsyncEuroMail:
         if metrics:
             params["metrics"] = ",".join(metrics)
         data = await self._get("/v1/analytics/timeseries", params=params or None)
-        return [from_dict(TimeseriesPoint, p) for p in data]
+        return [from_dict(TimeseriesPoint, p) for p in data["data"]]
 
     async def get_analytics_domains(
         self,
@@ -571,7 +571,7 @@ class AsyncEuroMail:
         if limit is not None:
             params["limit"] = limit
         data = await self._get("/v1/analytics/domains", params=params or None)
-        return [from_dict(DomainAnalytics, d) for d in data]
+        return [from_dict(DomainAnalytics, d) for d in data["data"]]
 
     async def export_analytics_csv(
         self,
@@ -604,7 +604,7 @@ class AsyncEuroMail:
 
     async def list_dead_letters(self, *, count: int = 50) -> list[DeadLetter]:
         data = await self._get("/v1/dead-letters", params={"count": count})
-        return [from_dict(DeadLetter, d) for d in data]
+        return [from_dict(DeadLetter, d) for d in data["data"]]
 
     async def retry_dead_letter(self, dead_letter_id: str) -> None:
         await self._post(f"/v1/dead-letters/{dead_letter_id}/retry", {})
@@ -840,7 +840,7 @@ class AsyncEuroMail:
 
     async def get_newsletter(self, newsletter_id: str) -> Newsletter:
         data = await self._get(f"/v1/newsletters/{newsletter_id}")
-        return from_dict(Newsletter, data["data"])
+        return from_dict(Newsletter, {**data["data"], "stats": data.get("stats")})
 
     async def update_newsletter(
         self, newsletter_id: str, **kwargs: Any
@@ -1065,7 +1065,7 @@ class AsyncEuroMail:
         *,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> list[MailboxMessage]:
+    ) -> list[ThreadListEntry]:
         params: dict[str, Any] = {}
         if limit is not None:
             params["limit"] = limit
@@ -1075,7 +1075,7 @@ class AsyncEuroMail:
             f"/v1/agent-mailboxes/{mailbox_id}/threads",
             params=params or None,
         )
-        return [from_dict(MailboxMessage, m) for m in data["data"]]
+        return [from_dict(ThreadListEntry, m) for m in data["data"]]
 
     async def get_mailbox_thread(
         self,

@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-10-29
+
+### Added
+
+- `AnalyticsSummary`: `total_hard_bounces`, `total_soft_bounces`, `total_complaints`, `total_rejected`, `complaint_rate_pct` and `unsubscribe_rate_pct`.
+- `DomainAnalytics`: `unique_opens`, `unique_clicks`, `delivery_rate` and `bounce_rate`.
+- `Email.events`: `get_email` now returns the email's events along with it. The API always sent them, but the SDK threw them away. `Email.transactional_declared` is added as well.
+- `Newsletter.stats` (`NewsletterStats`): delivery stats for a sent newsletter, filled in by `get_newsletter`.
+- `list_mailbox_threads` returns `ThreadListEntry`, which is a `MailboxMessage` plus the thread's `message_count`, `unread_count`, `sent_count`, `first_message_at` and `last_message_at`.
+- `MailboxMessage`: the sender checks and spam verdict that `InboundEmail` already has (`spf_result`, `dkim_result`, `dmarc_result`, `sender_helo`, `sender_hostname`, `sender_hostname_status`, `sender_country`, `sender_country_name`, `sender_service`, `spam_verdict`, `spam_reasons`).
+- `InboundRoute.skip_spam_webhooks` and `AgentMailbox.skip_spam_webhooks`.
+- `Template.preheader`, `SubAccount.updated_at`, `Subscription.plan_monthly_quota` and `first_payment_at`, `BillingPlan.annual_price_cents`, `stripe_annual_price_id` and `stripe_overage_price_id`.
+
+### Fixed
+
+- `list_dead_letters` raised `TypeError` on every call because `DeadLetter` required an `account_id` that the API does not send. The field has been removed.
+- On `AsyncEuroMail`, `get_analytics_timeseries`, `get_analytics_domains` and `list_dead_letters` raised on every call. They iterated over the response envelope instead of its `data`.
+
+### Changed
+
+- Fields the API sends as `null` are now typed `Optional`: the four `AnalyticsSummary` rates and the `DomainAnalytics` rates (an unknown rate is not the same as 0%), `DeadLetter.email_id`, `SubAccount.parent_account_id`, and `Subscription.subscription_status` and `billing_email`.
+- Response models take keyword arguments only. Code that builds one positionally, such as a test fake, must name the fields. This release reorders fields and makes some new ones required, so without this change a positional call could build without error and put values in the wrong fields. Request types (`SendEmailParams`, `Attachment`, the signup-form params) are unchanged.
+
 ## [0.6.0] - 2026-10-28
 
 ### Added

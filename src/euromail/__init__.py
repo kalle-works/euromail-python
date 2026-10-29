@@ -43,6 +43,7 @@ from euromail.types import (
     InboundEmail,
     InboundRoute,
     Newsletter,
+    NewsletterStats,
     NewsletterSendResponse,
     Operation,
     PaginatedResponse,
@@ -66,6 +67,7 @@ from euromail.types import (
     InsightReport,
     AgentMailbox,
     MailboxMessage,
+    ThreadListEntry,
     LeasedMessage,
     MailboxReplyResult,
     MailboxAttachmentUrl,
@@ -115,6 +117,7 @@ __all__ = [
     "InboundEmail",
     "InboundRoute",
     "Newsletter",
+    "NewsletterStats",
     "NewsletterSendResponse",
     "Operation",
     "PaginatedResponse",
@@ -138,6 +141,7 @@ __all__ = [
     "InsightReport",
     "AgentMailbox",
     "MailboxMessage",
+    "ThreadListEntry",
     "LeasedMessage",
     "MailboxReplyResult",
     "MailboxAttachmentUrl",
@@ -145,4 +149,4 @@ __all__ = [
     "MailboxAnalytics",
 ]
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"

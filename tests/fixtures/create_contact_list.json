@@ -27,5 +27,8 @@
       "welcome_email_text_body": "welcome_email_text_body-example"
     }
   },
-  "expect": {}
+  "expect": {},
+  "dropped": {},
+  "flatten": null,
+  "whole_body": false
 }

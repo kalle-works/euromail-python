@@ -1,0 +1,26 @@
+{
+  "call": "get_account",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/account"
+  ],
+  "schema": "AccountResponse",
+  "response": {
+    "data": {
+      "created_at": "2026-09-22T10:00:00Z",
+      "email": "email-example",
+      "emails_sent_this_month": 3,
+      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+      "monthly_quota": 3,
+      "name": "name-example",
+      "plan": "plan-example",
+      "quota_reset_at": "2026-09-22T10:00:00Z"
+    }
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null,
+  "whole_body": false
+}

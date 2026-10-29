@@ -1,0 +1,33 @@
+{
+  "call": "list_plans",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/billing/plans"
+  ],
+  "schema": "PlanLimits",
+  "response": {
+    "data": [
+      {
+        "annual_price_cents": 3,
+        "max_contact_lists": 3,
+        "max_domains": 3,
+        "max_sub_accounts": 3,
+        "max_templates": 3,
+        "max_webhooks": 3,
+        "monthly_quota": 3,
+        "plan": "plan-example",
+        "price_cents": 3,
+        "stripe_annual_price_id": "stripe_annual_price_id-example",
+        "stripe_overage_price_id": "stripe_overage_price_id-example",
+        "stripe_price_id": "stripe_price_id-example",
+        "tracking_enabled": true
+      }
+    ]
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null,
+  "whole_body": false
+}

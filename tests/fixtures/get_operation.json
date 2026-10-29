@@ -1,0 +1,37 @@
+{
+  "call": "get_operation",
+  "args": [
+    "c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/operations/c8e8c5a3-8050-506c-a5fb-de56aceb0032"
+  ],
+  "schema": "Operation",
+  "response": {
+    "data": {
+      "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+      "completed_at": "2026-09-22T10:00:00Z",
+      "completed_items": 3,
+      "created_at": "2026-09-22T10:00:00Z",
+      "error_summary": {
+        "example": "error_summary"
+      },
+      "expires_at": "2026-09-22T10:00:00Z",
+      "failed_items": 3,
+      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+      "metadata": {
+        "example": "metadata"
+      },
+      "operation_type": "batch_send",
+      "status": "pending",
+      "total_items": 3,
+      "updated_at": "2026-09-22T10:00:00Z"
+    }
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null,
+  "whole_body": false
+}

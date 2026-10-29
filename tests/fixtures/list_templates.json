@@ -1,0 +1,36 @@
+{
+  "call": "list_templates",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/templates"
+  ],
+  "schema": "Template",
+  "response": {
+    "data": [
+      {
+        "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+        "alias": "alias-example",
+        "created_at": "2026-09-22T10:00:00Z",
+        "html_body": "html_body-example",
+        "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+        "name": "name-example",
+        "preheader": "preheader-example",
+        "subject": "subject-example",
+        "text_body": "text_body-example",
+        "updated_at": "2026-09-22T10:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 25,
+      "total": 1,
+      "total_pages": 1
+    }
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null,
+  "whole_body": false
+}

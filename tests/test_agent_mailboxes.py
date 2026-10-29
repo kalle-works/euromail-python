@@ -52,6 +52,16 @@ MESSAGE_PAYLOAD = {
     "created_at": "2026-04-13T12:01:00Z",
 }
 
+# A thread-list row: the newest message plus counts over the thread.
+THREAD_PAYLOAD = {
+    **MESSAGE_PAYLOAD,
+    "message_count": 3,
+    "unread_count": 1,
+    "sent_count": 1,
+    "first_message_at": "2026-01-01T00:00:00Z",
+    "last_message_at": "2026-01-02T00:00:00Z",
+}
+
 
 def _sync_client() -> EuroMail:
     return EuroMail(api_key="test", base_url=BASE_URL)
@@ -239,7 +249,7 @@ def test_reply_to_message_html_only(sync_client):
 @respx.mock
 def test_list_mailbox_threads(sync_client):
     route = respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/threads").mock(
-        return_value=httpx.Response(200, json={"data": [MESSAGE_PAYLOAD]})
+        return_value=httpx.Response(200, json={"data": [THREAD_PAYLOAD]})
     )
     threads = sync_client.list_mailbox_threads("mb_123", limit=5, offset=10)
     assert threads[0].id == "msg_1"
@@ -393,7 +403,7 @@ async def test_async_reply_to_message(async_client):
 @respx.mock
 async def test_async_list_mailbox_threads(async_client):
     respx.get(f"{BASE_URL}/v1/agent-mailboxes/mb_123/threads").mock(
-        return_value=httpx.Response(200, json={"data": [MESSAGE_PAYLOAD]})
+        return_value=httpx.Response(200, json={"data": [THREAD_PAYLOAD]})
     )
     threads = await async_client.list_mailbox_threads("mb_123")
     assert threads[0].id == "msg_1"

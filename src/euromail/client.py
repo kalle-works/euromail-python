@@ -54,6 +54,7 @@ from euromail.types import (
     InsightReport,
     AgentMailbox,
     MailboxMessage,
+    ThreadListEntry,
     LeasedMessage,
     MailboxReplyResult,
     MailboxAttachmentUrl,
@@ -175,9 +176,8 @@ class EuroMail:
 
     def get_email(self, email_id: str) -> Email:
         data = self._get(f"/v1/emails/{email_id}")
-        inner = data.get("data", data)
-        email_data = inner.get("email", inner)
-        return from_dict(Email, email_data)
+        inner = data["data"]
+        return from_dict(Email, {**inner["email"], "events": inner["events"]})
 
     def list_emails(
         self,
@@ -629,8 +629,7 @@ class EuroMail:
         if metrics:
             params["metrics"] = ",".join(metrics)
         data = self._get("/v1/analytics/timeseries", params=params or None)
-        items = data["data"] if isinstance(data, dict) and "data" in data else data
-        return [from_dict(TimeseriesPoint, p) for p in items]
+        return [from_dict(TimeseriesPoint, p) for p in data["data"]]
 
     def get_analytics_domains(
         self,
@@ -644,8 +643,7 @@ class EuroMail:
         if limit is not None:
             params["limit"] = limit
         data = self._get("/v1/analytics/domains", params=params or None)
-        items = data["data"] if isinstance(data, dict) and "data" in data else data
-        return [from_dict(DomainAnalytics, d) for d in items]
+        return [from_dict(DomainAnalytics, d) for d in data["data"]]
 
     def export_analytics_csv(
         self,
@@ -678,8 +676,7 @@ class EuroMail:
 
     def list_dead_letters(self, *, count: int = 50) -> list[DeadLetter]:
         data = self._get("/v1/dead-letters", params={"count": count})
-        items = data["data"] if isinstance(data, dict) and "data" in data else data
-        return [from_dict(DeadLetter, d) for d in items]
+        return [from_dict(DeadLetter, d) for d in data["data"]]
 
     def retry_dead_letter(self, dead_letter_id: str) -> None:
         self._post(f"/v1/dead-letters/{dead_letter_id}/retry", {})
@@ -829,7 +826,7 @@ class EuroMail:
 
     def get_newsletter(self, newsletter_id: str) -> Newsletter:
         data = self._get(f"/v1/newsletters/{newsletter_id}")
-        return from_dict(Newsletter, data["data"])
+        return from_dict(Newsletter, {**data["data"], "stats": data.get("stats")})
 
     def update_newsletter(self, newsletter_id: str, **kwargs: Any) -> Newsletter:
         data = self._put(f"/v1/newsletters/{newsletter_id}", kwargs)
@@ -1052,7 +1049,7 @@ class EuroMail:
         *,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> list[MailboxMessage]:
+    ) -> list[ThreadListEntry]:
         params: dict[str, Any] = {}
         if limit is not None:
             params["limit"] = limit
@@ -1062,7 +1059,7 @@ class EuroMail:
             f"/v1/agent-mailboxes/{mailbox_id}/threads",
             params=params or None,
         )
-        return [from_dict(MailboxMessage, m) for m in data["data"]]
+        return [from_dict(ThreadListEntry, m) for m in data["data"]]
 
     def get_mailbox_thread(
         self,

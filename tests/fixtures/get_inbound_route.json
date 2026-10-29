@@ -11,18 +11,22 @@
   "schema": "InboundRoute",
   "response": {
     "data": {
-      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
       "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
-      "domain_id": "9bd740f6-1eec-5db5-ae51-a0ba00848428",
-      "pattern": "pattern-example",
-      "match_type": "match_type-example",
-      "priority": 3,
-      "webhook_url": "webhook_url-example",
-      "is_active": true,
       "created_at": "2026-09-22T10:00:00Z",
+      "domain_id": "9bd740f6-1eec-5db5-ae51-a0ba00848428",
+      "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+      "is_active": true,
+      "match_type": "match_type-example",
+      "pattern": "pattern-example",
+      "priority": 3,
+      "skip_spam_webhooks": true,
       "updated_at": "2026-09-22T10:00:00Z",
-      "webhook_id": "37bbbfc3-0101-5cc8-a8cf-af77e7ab38cd"
+      "webhook_id": "37bbbfc3-0101-5cc8-a8cf-af77e7ab38cd",
+      "webhook_url": "webhook_url-example"
     }
   },
-  "expect": {}
+  "expect": {},
+  "dropped": {},
+  "flatten": null,
+  "whole_body": false
 }

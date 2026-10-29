@@ -1,0 +1,32 @@
+{
+  "call": "list_suppressions",
+  "args": [],
+  "kwargs": {},
+  "request": [
+    "GET",
+    "/v1/suppressions"
+  ],
+  "schema": "Suppression",
+  "response": {
+    "data": [
+      {
+        "account_id": "fc406502-93f9-5e5c-a566-f83d4aa924f2",
+        "created_at": "2026-09-22T10:00:00Z",
+        "email_address": "email_address-example",
+        "id": "56aa595c-6d68-5291-9ab4-b5274b714f7f",
+        "reason": "reason-example",
+        "source_email_id": "5b08cbe3-f1de-5258-a51d-c2af9f55c706"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 25,
+      "total": 1,
+      "total_pages": 1
+    }
+  },
+  "expect": {},
+  "dropped": {},
+  "flatten": null,
+  "whole_body": false
+}
