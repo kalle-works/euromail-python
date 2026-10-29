@@ -21,15 +21,25 @@ import httpx
 import pytest
 import respx
 
-from euromail import EuroMail, PaginatedResponse
+from euromail import AsyncEuroMail, EuroMail, PaginatedResponse
 
 BASE_URL = "https://api.euromail.test"
 FIXTURES = sorted((Path(__file__).parent / "fixtures").glob("*.json"))
 
 
+async def call(client_kind: str, spec: dict) -> object:
+    method = spec["call"]
+    if client_kind == "sync":
+        with EuroMail(api_key="test", base_url=BASE_URL) as client:
+            return getattr(client, method)(*spec["args"], **spec["kwargs"])
+    async with AsyncEuroMail(api_key="test", base_url=BASE_URL) as client:
+        return await getattr(client, method)(*spec["args"], **spec["kwargs"])
+
+
+@pytest.mark.parametrize("client_kind", ["sync", "async"])
 @pytest.mark.parametrize("fixture", FIXTURES, ids=lambda p: p.stem)
 @respx.mock
-def test_call_exposes_every_field_the_api_sends(fixture):
+async def test_call_exposes_every_field_the_api_sends(fixture, client_kind):
     spec = json.loads(fixture.read_text())
     method, path = spec["request"]
     body = spec["response"]
@@ -37,8 +47,7 @@ def test_call_exposes_every_field_the_api_sends(fixture):
         return_value=httpx.Response(200, json=body)
     )
 
-    with EuroMail(api_key="test", base_url=BASE_URL) as client:
-        result = getattr(client, spec["call"])(*spec["args"], **spec["kwargs"])
+    result = await call(client_kind, spec)
 
     envelope = set(body) - {"data"} - set(spec["dropped"])
     if isinstance(result, PaginatedResponse):

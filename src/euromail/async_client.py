@@ -557,7 +557,7 @@ class AsyncEuroMail:
         if metrics:
             params["metrics"] = ",".join(metrics)
         data = await self._get("/v1/analytics/timeseries", params=params or None)
-        return [from_dict(TimeseriesPoint, p) for p in data]
+        return [from_dict(TimeseriesPoint, p) for p in data["data"]]
 
     async def get_analytics_domains(
         self,
@@ -571,7 +571,7 @@ class AsyncEuroMail:
         if limit is not None:
             params["limit"] = limit
         data = await self._get("/v1/analytics/domains", params=params or None)
-        return [from_dict(DomainAnalytics, d) for d in data]
+        return [from_dict(DomainAnalytics, d) for d in data["data"]]
 
     async def export_analytics_csv(
         self,
@@ -604,7 +604,7 @@ class AsyncEuroMail:
 
     async def list_dead_letters(self, *, count: int = 50) -> list[DeadLetter]:
         data = await self._get("/v1/dead-letters", params={"count": count})
-        return [from_dict(DeadLetter, d) for d in data]
+        return [from_dict(DeadLetter, d) for d in data["data"]]
 
     async def retry_dead_letter(self, dead_letter_id: str) -> None:
         await self._post(f"/v1/dead-letters/{dead_letter_id}/retry", {})

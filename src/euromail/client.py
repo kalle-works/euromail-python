@@ -629,8 +629,7 @@ class EuroMail:
         if metrics:
             params["metrics"] = ",".join(metrics)
         data = self._get("/v1/analytics/timeseries", params=params or None)
-        items = data["data"] if isinstance(data, dict) and "data" in data else data
-        return [from_dict(TimeseriesPoint, p) for p in items]
+        return [from_dict(TimeseriesPoint, p) for p in data["data"]]
 
     def get_analytics_domains(
         self,
@@ -644,8 +643,7 @@ class EuroMail:
         if limit is not None:
             params["limit"] = limit
         data = self._get("/v1/analytics/domains", params=params or None)
-        items = data["data"] if isinstance(data, dict) and "data" in data else data
-        return [from_dict(DomainAnalytics, d) for d in items]
+        return [from_dict(DomainAnalytics, d) for d in data["data"]]
 
     def export_analytics_csv(
         self,
@@ -678,8 +676,7 @@ class EuroMail:
 
     def list_dead_letters(self, *, count: int = 50) -> list[DeadLetter]:
         data = self._get("/v1/dead-letters", params={"count": count})
-        items = data["data"] if isinstance(data, dict) and "data" in data else data
-        return [from_dict(DeadLetter, d) for d in items]
+        return [from_dict(DeadLetter, d) for d in data["data"]]
 
     def retry_dead_letter(self, dead_letter_id: str) -> None:
         self._post(f"/v1/dead-letters/{dead_letter_id}/retry", {})
