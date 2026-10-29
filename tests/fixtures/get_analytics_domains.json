@@ -32,5 +32,6 @@
   "dropped": {
     "period": "the range the caller asked for"
   },
-  "flatten": null
+  "flatten": null,
+  "whole_body": false
 }

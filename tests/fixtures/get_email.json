@@ -86,5 +86,6 @@
   },
   "expect": {},
   "dropped": {},
-  "flatten": "email"
+  "flatten": "email",
+  "whole_body": false
 }

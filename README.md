@@ -321,7 +321,8 @@ client.delete_inbound_route(route.id)
 ```python
 # Overview for the last 30 days
 overview = client.get_analytics_overview(period="30d")
-print(f"Delivery rate: {overview.delivery_rate}%")
+if overview.delivery_rate_pct is not None:  # None until a send reaches an outcome
+    print(f"Delivery rate: {overview.delivery_rate_pct}%")
 
 # Custom date range
 custom = client.get_analytics_overview(from_date="2025-01-01", to_date="2025-01-31")

@@ -8,7 +8,8 @@ value the API sent, or with the value in the fixture's `expect` where the SDK
 reshapes it on purpose (a member named by `flatten` is read as fields of
 the model itself). The same holds for what the envelope carries beside
 `data`, except `pagination` (read into `PaginatedResponse`) and the keys the
-fixture lists under `dropped`.
+fixture lists under `dropped`. A fixture marked `whole_body` returns a model
+of the entire body, so the body is compared as one object.
 """
 
 from __future__ import annotations
@@ -49,6 +50,8 @@ async def test_call_exposes_every_field_the_api_sends(fixture, client_kind):
 
     result = await call(client_kind, spec)
 
+    if spec["whole_body"]:
+        body = {"data": body}
     envelope = set(body) - {"data"} - set(spec["dropped"])
     if isinstance(result, PaginatedResponse):
         envelope.discard("pagination")

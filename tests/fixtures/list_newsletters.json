@@ -40,5 +40,6 @@
   "dropped": {
     "total": "returns a plain list"
   },
-  "flatten": null
+  "flatten": null,
+  "whole_body": false
 }

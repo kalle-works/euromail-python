@@ -30,5 +30,6 @@
   },
   "expect": {},
   "dropped": {},
-  "flatten": null
+  "flatten": null,
+  "whole_body": false
 }

@@ -73,6 +73,9 @@ DROPPED: dict[str, dict[str, str]] = {
 # `get_email` returns {"email": …, "events": […]} as one Email with `events`.
 FLATTEN: dict[str, str] = {"get_email": "email"}
 
+# Calls whose model is the whole body, `data` included, not what is under it.
+WHOLE_BODY = {"wait_for_next_message"}
+
 ID = str(uuid.uuid5(UUID_NS, "path-id"))
 THREAD_ID = str(uuid.uuid5(UUID_NS, "path-thread_id"))
 
@@ -80,6 +83,7 @@ THREAD_ID = str(uuid.uuid5(UUID_NS, "path-thread_id"))
 # document writes it). Path parameters are filled with ID, or THREAD_ID for
 # `{thread_id}`, for the request. Every SDK read call that returns a model is
 # here; `gdpr_export` and `get_message_attachment_urls` return the raw body.
+# Write calls are here only where their response shape is their own.
 ENDPOINTS: dict[str, tuple[str, list[str], dict[str, str], str, str]] = {
     "get_account": ("get_account", [], {}, "GET", "/v1/account"),
     "get_email": ("get_email", [ID], {}, "GET", "/v1/emails/{id}"),
@@ -149,6 +153,9 @@ ENDPOINTS: dict[str, tuple[str, list[str], dict[str, str], str, str]] = {
     ),
     "get_mailbox_analytics": (
         "get_mailbox_analytics", [ID], {}, "GET", "/v1/agent-mailboxes/{id}/analytics",
+    ),
+    "wait_for_next_message": (
+        "wait_for_next_message", [ID], {}, "GET", "/v1/agent-mailboxes/{id}/messages/next",
     ),
 }
 
@@ -250,6 +257,7 @@ def main(openapi_path: str) -> None:
             "expect": EXPECT.get(schema, {}),
             "dropped": DROPPED.get(name, {}),
             "flatten": FLATTEN.get(name),
+            "whole_body": name in WHOLE_BODY,
         }
         (HERE / f"{name}.json").write_text(json.dumps(fixture, indent=2) + "\n")
         print(f"wrote {name}.json")
