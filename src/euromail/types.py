@@ -275,6 +275,8 @@ class Domain:
     sending_subdomain: Optional[str] = None
     detected_provider: Optional[str] = None
     """DNS host detected for the domain (e.g. `"cloudflare"`), if any."""
+    require_tls: bool = False
+    """When true, mail from this domain is never sent unencrypted; see `update_domain`."""
     dns_checked_at: Optional[str] = None
     """Last time the DNS monitor checked this verified domain."""
     dns_drift_detected_at: Optional[str] = None

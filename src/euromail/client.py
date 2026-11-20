@@ -307,6 +307,20 @@ class EuroMail:
         data = self._get(f"/v1/domains/{domain_id}")
         return from_dict(Domain, data["data"])
 
+    def update_domain(
+        self, domain_id: str, *, require_tls: Optional[bool] = None
+    ) -> Domain:
+        """Change a domain's settings; only the arguments given are sent.
+
+        With `require_tls=True`, mail from the domain is never sent in plain
+        text. Needs the `domains:manage` scope.
+        """
+        payload: dict[str, Any] = {}
+        if require_tls is not None:
+            payload["require_tls"] = require_tls
+        data = self._patch(f"/v1/domains/{domain_id}", payload)
+        return from_dict(Domain, data["data"])
+
     def verify_domain(self, domain_id: str) -> DomainVerificationResult:
         data = self._post(f"/v1/domains/{domain_id}/verify", {})
         inner = _unwrap(data)
