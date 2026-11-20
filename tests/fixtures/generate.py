@@ -92,6 +92,9 @@ ENDPOINTS: dict[str, tuple[str, list[str], dict[str, str], str, str]] = {
     "get_template": ("get_template", [ID], {}, "GET", "/v1/templates/{id}"),
     "list_templates": ("list_templates", [], {}, "GET", "/v1/templates"),
     "get_domain": ("get_domain", [ID], {}, "GET", "/v1/domains/{id}"),
+    "update_domain": (
+        "update_domain", [ID], {"require_tls": True}, "PATCH", "/v1/domains/{id}",
+    ),
     "list_domains": ("list_domains", [], {}, "GET", "/v1/domains"),
     "get_webhook": ("get_webhook", [ID], {}, "GET", "/v1/webhooks/{id}"),
     "list_webhooks": ("list_webhooks", [], {}, "GET", "/v1/webhooks"),

@@ -50,6 +50,7 @@
         "inbound_enabled": true,
         "mx_verified": true,
         "mx_verified_at": "2026-09-22T10:00:00Z",
+        "require_tls": true,
         "return_path_verified": true,
         "sending_subdomain": "sending_subdomain-example",
         "spf_verified": true,

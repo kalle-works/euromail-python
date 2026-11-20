@@ -175,6 +175,10 @@ if verification.fully_verified:
 # List all domains
 domains = client.list_domains(page=1, per_page=25)
 
+# Never send this domain's mail in plain text (needs the domains:manage scope)
+domain = client.update_domain(domain.id, require_tls=True)
+print(domain.require_tls)  # True
+
 # Remove a domain
 client.delete_domain(domain.id)
 ```
@@ -422,6 +426,7 @@ except EuroMailError as e:
 | | `list_templates(...)` | List templates with pagination |
 | **Domains** | `add_domain(domain)` | Register a sending domain |
 | | `get_domain(id)` | Get domain details and DNS records |
+| | `update_domain(id, require_tls=...)` | Change domain settings, such as requiring TLS |
 | | `verify_domain(id)` | Trigger DNS verification |
 | | `delete_domain(id)` | Remove a domain |
 | | `list_domains(...)` | List domains with pagination |
